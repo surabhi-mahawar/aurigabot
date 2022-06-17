@@ -19,8 +19,7 @@ public class User{
 
     private String name;
 
-    private Long managerId;
-    private String mobile;
+    private String interfaceUserId;
     @Enumerated(EnumType.STRING)
     private RoleType role;
     private Date dob;
