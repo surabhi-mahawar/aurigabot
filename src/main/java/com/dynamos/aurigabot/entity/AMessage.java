@@ -22,7 +22,7 @@ public class AMessage {
     private Date receivedAt;
     private Date sentAt;
     private State state;
-    private Status status;
+    private String interfaceUserId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
