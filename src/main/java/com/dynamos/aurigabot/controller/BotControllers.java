@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-public class Test {
+public class BotControllers {
 
     @PostMapping("/api/v1/test")
     public String testAPICall(@RequestBody JsonNode json){
