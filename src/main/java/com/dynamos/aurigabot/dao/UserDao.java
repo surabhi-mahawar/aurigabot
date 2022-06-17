@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface UserDao extends CrudRepository<User,Long> {
     @Query("from User u where day(u.dob) = day(CURRENT_DATE) and month(u.dob) = month(CURRENT_DATE)")
-    public List<User> getUserByDate();
+    List<User> getUserByDate();
+
+    User findByInterfaceUserId(String key);
 }

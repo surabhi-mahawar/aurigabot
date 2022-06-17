@@ -18,14 +18,13 @@ public class User{
     private Long id;
 
     private String name;
-
+    private String username;
     private String interfaceUserId;
     @Enumerated(EnumType.STRING)
     private RoleType role;
     private Date dob;
     private Date joinedAt;
     private String email;
-
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
     private AMessage lastMessage;
 }
