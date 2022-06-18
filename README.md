@@ -36,6 +36,7 @@
 * Helpdesk
 * Surveys
 * Add more functionalities to birthday command
+* Notification Bot
 
 ### Arhitecture ###
 <img src="src/main/resources/static/architecture.png">
