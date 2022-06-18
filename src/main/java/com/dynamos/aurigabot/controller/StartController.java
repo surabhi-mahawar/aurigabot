@@ -60,7 +60,7 @@ public class StartController {
     @PostMapping("/api/v1/start")
     public String startAPICall(@RequestBody JsonNode json){
         System.out.println(json);
-        String key = json.get("interfaceUserId").toString();
+        String key = json.get("interfaceUserId").asText();
         User user = userDao.findByInterfaceUserId (key);
         if (isNull(user)) {
             return "";

@@ -25,8 +25,9 @@ public class BirthdaysController {
         AMessage message = new AMessage();
         String str = "";
         for(User user : users){
-            str += user.getName() + "\n";
+            str += "Happy birthday! " + user.getName() + "\n";
         }
+        message.setOptions("");
         message.setText(str);
         message.setSentAt(new Date());
         ObjectMapper objectMapper = new ObjectMapper();
