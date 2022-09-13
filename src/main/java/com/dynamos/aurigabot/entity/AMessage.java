@@ -1,4 +1,4 @@
-package com.dynamos.aurigabot.entity;
+	package com.dynamos.aurigabot.entity;
 
 import com.dynamos.aurigabot.enums.State;
 import com.dynamos.aurigabot.enums.Status;

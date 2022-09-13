@@ -42,6 +42,12 @@ Thumbs.db
 
 # Large media files
 *.mp4
+
+.factorypath
+.classpath
+.project 
+.settings/
+bin/ 
 *.tiff
 *.avi
 *.flv
