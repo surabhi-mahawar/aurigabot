@@ -27,4 +27,13 @@ public class User{
     private String email;
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
     private AMessage lastMessage;
+    
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    private LeaveRequest leaveRequest;
+    
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    private LeaveBalance leaveBalance;
+    
+    @OneToOne(fetch = FetchType.LAZY,mappedBy = "user")
+    private EmployeeManager employeeManager;
 }
