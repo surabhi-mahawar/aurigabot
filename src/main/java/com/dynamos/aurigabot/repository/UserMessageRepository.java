@@ -1,10 +1,15 @@
 package com.dynamos.aurigabot.repository;
 
-
 import com.dynamos.aurigabot.entity.UserMessage;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface UserMessageRepository extends R2dbcRepository<UserMessage,Long> {
+import java.util.UUID;
+
+public interface UserMessageRepository extends R2dbcRepository<UserMessage, UUID> {
+    Mono<UserMessage> findById(UUID id);
+
+    Mono<UserMessage> save(UserMessage userMessage);
 }
