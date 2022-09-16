@@ -4,10 +4,7 @@ import com.dynamos.aurigabot.enums.CommandType;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Date;
 import java.util.UUID;
 
@@ -22,4 +19,10 @@ public class Commands {
     private String description;
     private Date createdAt;
     private Date updatedAt;
+
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "commands")
+    private Flow flow;
+
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "commands")
+    private UserMessage message;
 }

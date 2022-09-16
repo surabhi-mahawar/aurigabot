@@ -47,6 +47,7 @@ Thumbs.db
 .classpath
 .project 
 .settings/
+.metadata/
 bin/ 
 *.tiff
 *.avi

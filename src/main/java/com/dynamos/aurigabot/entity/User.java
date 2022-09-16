@@ -5,6 +5,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import javax.persistence.FetchType;
+import javax.persistence.OneToOne;
 import java.util.UUID;
 
 @Builder
@@ -17,6 +19,17 @@ public class User {
     private String mobile;
     private String email;
     private String username;
-    private Integer employeeId;
+
+    private UUID employeeId;
+
+
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    private LeaveRequest leaveRequest;
+
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    private LeaveBalance leaveBalance;
+
+    @OneToOne(fetch = FetchType.LAZY,mappedBy = "user")
+    private EmployeeManager employeeManager;
 
 }
