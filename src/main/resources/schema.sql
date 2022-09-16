@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS userMessage (
     channel varchar(50) NOT NULL,
     provider varchar(50) NOT NULL,
     message text NOT NULL,
+    payload jsonb NOT NULL,
     status varchar(20) NOT NULL,
     received_at timestamp without time zone,
     sent_at timestamp without time zone,

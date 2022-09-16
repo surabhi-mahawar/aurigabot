@@ -1,8 +1,10 @@
 package com.dynamos.aurigabot.model.webPortal;
 
+import com.dynamos.aurigabot.dto.MessagePayloadChoiceDto;
 import lombok.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 
 @Getter
 @Setter
@@ -13,4 +15,5 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class OutbondMessagePayload {
     private String title;
     private String msg_type;
+    private ArrayList<MessagePayloadChoiceDto> choices;
 }
