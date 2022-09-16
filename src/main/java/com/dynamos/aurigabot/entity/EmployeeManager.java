@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -15,8 +16,11 @@ public class EmployeeManager {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
-    private User user;
+    private User employee;
 
+   @OneToMany(fetch = FetchType.LAZY)
+   @JoinColumn(name = "manager_id")
+   private User manager;
 
     private Integer managerId;
 }

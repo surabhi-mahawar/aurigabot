@@ -4,10 +4,7 @@ import com.dynamos.aurigabot.enums.LeaveStatus;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Date;
 import java.util.UUID;
 
@@ -17,12 +14,18 @@ import java.util.UUID;
 public class LeaveRequest {
     @Id
     private UUID id;
-    private Integer employeeId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private User user;
+
     private String reason;
     private Date fromDate;
     private Date toDate;
     @Enumerated(EnumType.STRING)
     private LeaveStatus status;
-    private String approvedBy;
+
+
+    private UUID approvedBy;
 
 }

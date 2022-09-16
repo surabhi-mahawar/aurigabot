@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
-    id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
+    id uuid uuid_generate_v4 () PRIMARY KEY,
     name varchar(100) NOT NULL,
     mobile varchar(10) NULL,
     email VARCHAR(255) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS userMessage (
 
 );
 CREATE TABLE IF NOT EXISTS commands (
-    id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
+    id uuid  uuid_generate_v4 () PRIMARY KEY,
     command_type VARCHAR(255) NOT NULL,
     description text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS leave_balance (
 CREATE TABLE IF NOT EXISTS employee_manager(
     id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY ,
     employee_id uuid FOREIGN KEY REFERENCES users(id),
-    manager_id uuid FOREIGN KEY REFERENCES users(id)
+    manager_id uuid FOREIGN KEY REFERENCES users(id),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );

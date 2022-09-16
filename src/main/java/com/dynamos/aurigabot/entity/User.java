@@ -6,7 +6,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -23,13 +26,16 @@ public class User {
     private UUID employeeId;
 
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
     private LeaveRequest leaveRequest;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
     private LeaveBalance leaveBalance;
 
-    @OneToOne(fetch = FetchType.LAZY,mappedBy = "user")
-    private EmployeeManager employeeManager;
+    @OneToOne(fetch = FetchType.LAZY,mappedBy = "users")
+    private EmployeeManager employee;
+
+    @OneToMany(fetch = FetchType.LAZY , mappedBy = "users")
+    private EmployeeManager manager;
 
 }
