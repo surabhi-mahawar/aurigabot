@@ -1,21 +1,21 @@
 package com.dynamos.aurigabot.adapters;
 
 import com.dynamos.aurigabot.entity.UserMessage;
-import com.dynamos.aurigabot.model.web.InboundMessage;
-import com.dynamos.aurigabot.model.web.OutbondMessagePayload;
-import com.dynamos.aurigabot.model.web.OutboundMessage;
-import com.dynamos.aurigabot.model.web.OutboundResponse;
-import com.dynamos.aurigabot.service.WebService;
+import com.dynamos.aurigabot.enums.UserMessageStatus;
+import com.dynamos.aurigabot.model.webPortal.InboundMessage;
+import com.dynamos.aurigabot.model.webPortal.OutbondMessagePayload;
+import com.dynamos.aurigabot.model.webPortal.OutboundMessage;
+import com.dynamos.aurigabot.response.webPortal.OutboundResponse;
+import com.dynamos.aurigabot.service.WebPortalService;
 import com.dynamos.aurigabot.utils.BotUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
-public class WebAdapter implements AbstractAdapter {
+public class WebPortalAdapter implements AbstractAdapter {
 
     /**
-     * Convert inbound WebMessage to UserMessage
+     * Convert received WebMessage object to UserMessage object
      * @param message
      * @return
      */
@@ -24,17 +24,21 @@ public class WebAdapter implements AbstractAdapter {
         UserMessage userMsg = UserMessage.builder().build();
         userMsg.setFromSource(webMsg.getFrom());
         userMsg.setMessage(webMsg.getBody());
-        userMsg.setToSource(BotUtil.USER_ADMIN);
-//        userMsg.setToUserId(1);
-//        userMsg.setMessageId(BotUtil.getUserMessageId(webMsg.getMessageId()));
         userMsg.setProvider(BotUtil.PROVIDER_TRANSPORT_SOCKET);
         userMsg.setChannel(BotUtil.CHANNEL_WEB);
+        userMsg.setStatus(UserMessageStatus.REPLIED);
+        userMsg.setIndex(0);
         return Mono.just(userMsg);
     }
 
-    public Mono<UserMessage> convertOutboundMsgFromMessageFormat(UserMessage userMessage){
+    /**
+     * Convert UserMessage object to OutboundMessage object
+     * @param userMessage
+     * @return
+     */
+    public Object convertOutboundMsgFromMessageFormat(UserMessage userMessage) {
         OutbondMessagePayload payload = OutbondMessagePayload.builder()
-                .title("Welcome to auriga bot.")
+                .title(userMessage.getMessage())
                 .msg_type("text")
                 .build();
         OutboundMessage outboundMessage = OutboundMessage.builder()
@@ -43,10 +47,22 @@ public class WebAdapter implements AbstractAdapter {
                 .messageId(BotUtil.getUserMessageId(""))
                 .build();
 
-        return (new WebService()).sendOutboundMessage("http://localhost:3005/botMsg/adapterOutbound", outboundMessage)
+        return outboundMessage;
+    }
+
+    /**
+     * Send outbound message to web portal
+     * @param userMessage
+     * @return
+     */
+    public Mono<UserMessage> sendOutboundMessage(UserMessage userMessage) {
+        OutboundMessage outboundMessage = (OutboundMessage) convertOutboundMsgFromMessageFormat(userMessage);
+
+        return (new WebPortalService()).sendOutboundMessage("http://localhost:3005/botMsg/adapterOutbound", outboundMessage)
                 .map(new Function<OutboundResponse, UserMessage>() {
                     @Override
                     public UserMessage apply(OutboundResponse outboundResponse) {
+                        userMessage.setStatus(UserMessageStatus.SENT);
                         return userMessage;
                     }
                 });

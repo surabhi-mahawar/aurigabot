@@ -12,5 +12,17 @@ public interface AbstractAdapter {
      */
     public Mono<UserMessage> convertInboundMsgToMessageFormat(Object message);
 
-    public Mono<UserMessage> convertOutboundMsgFromMessageFormat(UserMessage message);
+    /**
+     * Converts user message object to outbound message format
+     * @param userMessage
+     * @return UserMessage
+     */
+    public Object convertOutboundMsgFromMessageFormat(UserMessage userMessage);
+
+    /**
+     * Send user message to user
+     * @param userMessage
+     * @return
+     */
+    public Mono<UserMessage> sendOutboundMessage(UserMessage userMessage);
 }

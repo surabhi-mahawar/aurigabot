@@ -1,4 +1,4 @@
-package com.dynamos.aurigabot.model.web;
+package com.dynamos.aurigabot.response.webPortal;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

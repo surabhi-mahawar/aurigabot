@@ -1,15 +1,16 @@
 package com.dynamos.aurigabot.entity;
 
-import com.dynamos.aurigabot.enums.Status;
+import com.dynamos.aurigabot.enums.UserMessageStatus;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 @Builder
 @Data
+@Table(name = "userMessage")
 public class UserMessage {
     @Id
     private UUID id;
@@ -21,6 +22,7 @@ public class UserMessage {
     private String provider;
     private UUID commandId;
     private UUID flowId;
+    private int index;
     private String message;
-    private Status status;
+    private UserMessageStatus status;
 }

@@ -1,9 +1,8 @@
-package com.dynamos.aurigabot.model.web;
+package com.dynamos.aurigabot.model.webPortal;
 
 import lombok.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 
 @Getter
 @Setter

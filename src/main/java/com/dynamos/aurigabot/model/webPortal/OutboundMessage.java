@@ -1,4 +1,4 @@
-package com.dynamos.aurigabot.model.web;
+package com.dynamos.aurigabot.model.webPortal;
 
 import lombok.*;
 

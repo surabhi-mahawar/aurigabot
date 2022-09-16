@@ -1,25 +1,27 @@
 package com.dynamos.aurigabot.service;
 
-import com.dynamos.aurigabot.model.web.OutboundMessage;
-import com.dynamos.aurigabot.model.web.OutboundResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.dynamos.aurigabot.model.webPortal.OutboundMessage;
+import com.dynamos.aurigabot.response.webPortal.OutboundResponse;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class WebService {
+public class WebPortalService {
     private final WebClient webClient;
 
-    public WebService() {
+    public WebPortalService() {
         this.webClient = WebClient.builder().build();
     }
 
+    /**
+     * Send outbound message to web portal using web client
+     * @param url
+     * @param outboundMessage
+     * @return
+     */
     public Mono<OutboundResponse> sendOutboundMessage(String url, OutboundMessage outboundMessage) {
         return webClient.post()
                 .uri(url)
