@@ -21,6 +21,4 @@ public class EmployeeManager {
    @OneToMany(fetch = FetchType.LAZY)
    @JoinColumn(name = "manager_id")
    private User manager;
-
-    private Integer managerId;
 }

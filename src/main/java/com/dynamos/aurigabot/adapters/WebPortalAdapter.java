@@ -37,7 +37,7 @@ public class WebPortalAdapter implements AbstractAdapter {
         userMsg.setProvider(BotUtil.PROVIDER_TRANSPORT_SOCKET);
         userMsg.setChannel(BotUtil.CHANNEL_WEB);
         userMsg.setStatus(UserMessageStatus.REPLIED);
-        userMsg.setIndex(0);
+//        userMsg.setIndex(0);
         return Mono.just(userMsg);
     }
 

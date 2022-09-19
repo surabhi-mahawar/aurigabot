@@ -17,15 +17,15 @@ public class Flow {
     private UUID id;
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="command_id")
-    private Commands commands;
+    private Command command;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
-    private UserMessage message;
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
+//    private UserMessage message;
 
     private String question;
     private Long index;
-    private Date createdAt;
-    private Date updatedAt;
+//    private Date createdAt;
+//    private Date updatedAt;
 
 }
 

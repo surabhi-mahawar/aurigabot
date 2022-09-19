@@ -6,23 +6,22 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
 @Data
-@Table(name ="commands")
-public class Commands {
+@Table(name ="command")
+public class Command {
     @Id
     private UUID id;
     @Enumerated(EnumType.STRING)
     private CommandType commandType;
     private String description;
-    private Date createdAt;
-    private Date updatedAt;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "commands")
-    private Flow flow;
-
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "commands")
-    private UserMessage message;
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "command")
+//    private Flow flow;
+//
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "command")
+//    private UserMessage message;
 }

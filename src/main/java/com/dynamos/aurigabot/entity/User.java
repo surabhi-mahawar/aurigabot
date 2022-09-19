@@ -9,6 +9,8 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,20 +24,19 @@ public class User {
     private String mobile;
     private String email;
     private String username;
+    private Date dob;
+    private int employeeId;
 
-    private UUID employeeId;
-
-
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
-    private LeaveRequest leaveRequest;
-
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
-    private LeaveBalance leaveBalance;
-
-    @OneToOne(fetch = FetchType.LAZY,mappedBy = "users")
-    private EmployeeManager employee;
-
-    @OneToMany(fetch = FetchType.LAZY , mappedBy = "users")
-    private EmployeeManager manager;
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
+//    private LeaveRequest leaveRequest;
+//
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
+//    private LeaveBalance leaveBalance;
+//
+//    @OneToOne(fetch = FetchType.LAZY,mappedBy = "users")
+//    private EmployeeManager employee;
+//
+//    @OneToMany(fetch = FetchType.LAZY , mappedBy = "users")
+//    private EmployeeManager manager;
 
 }

@@ -3,8 +3,7 @@ package com.dynamos.aurigabot.entity;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.UUID;
 
 @Builder
@@ -13,6 +12,12 @@ import java.util.UUID;
 public class LeaveBalance {
     @Id
     private UUID id;
-    private Integer employeeId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private User user;
+
+    private int cl;
+    private int pl;
 
 }
