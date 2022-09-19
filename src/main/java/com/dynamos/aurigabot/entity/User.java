@@ -9,6 +9,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import java.sql.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class User {
     private String mobile;
     private String email;
     private String username;
-
+    private Date dob;
     private UUID employeeId;
 
 

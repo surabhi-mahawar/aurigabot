@@ -1,13 +1,12 @@
 package com.dynamos.aurigabot.entity;
 
 import com.dynamos.aurigabot.enums.Status;
+import com.dynamos.aurigabot.enums.UserMessageStatus;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.math.BigInteger;
 import java.util.UUID;
 
@@ -32,5 +31,6 @@ public class UserMessage {
     private String provider;
 
     private String message;
-    private Status status;
+    @Enumerated(EnumType.STRING)
+    private UserMessageStatus status;
 }
