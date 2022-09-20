@@ -48,33 +48,17 @@ public class InboundMessageService {
 						return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, Mono<Mono<HttpApiResponse>>>() {
 							@Override
 							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
-								UserMessageDto outUserMessageDto = UserMessageDto.builder()
-										.fromUserId(userMessage.getToUserId())
-										.toUserId(userMessage.getFromUserId())
-										.fromSource(userMessage.getToSource())
-										.toSource(userMessage.getFromSource())
-										.channel(userMessage.getChannel())
-										.provider(userMessage.getProvider())
-										.index(0)
-										.status(UserMessageStatus.PENDING)
-										.build();
-								if(isBotStartingMessage(userMessage.getMessage())) {
-									outUserMessageDto = processBotStartingMessage(user, outUserMessageDto);
-								} else {
-									outUserMessageDto = processInvalidRequest(outUserMessageDto);
-								}
 
-								return adapter.sendOutboundMessage(outUserMessageDto).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
+								MessageService messageService = MessageService.builder().build();
+								return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
 									@Override
 									public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
-										UserMessage outUserMessageDao = UserMessageUtil.convertDtotoDao(outUserMessageDto);
-										return userMessageRepository.save(outUserMessageDao).map(new Function<UserMessage, HttpApiResponse>() {
-											@Override
-											public HttpApiResponse apply(UserMessage outUserMessage) {
-												response.setMessage("Replied sent to user.");
-												return response;
-											}
-										});
+										OutboundMessageService outboundMessageService = OutboundMessageService.builder()
+												.adapter(adapter)
+												.userMessageRepository(userMessageRepository)
+												.build();
+
+										return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
 									}
 								});
 							}
@@ -105,65 +89,7 @@ public class InboundMessageService {
 		});
 	}
 
-	/**
-	 * Check if message equals bot starting message
-	 * @param message
-	 * @return
-	 */
-	public Boolean isBotStartingMessage (String message) {
-		return message.equalsIgnoreCase(BotUtil.BOT_START_MSG);
-	}
 
-	/**
-	 * Get list of commands for bot
-	 * @return
-	 */
-	public List<String> getCommandsList() {
-		List<String> list = new ArrayList<>();
-		list.add("/dashboard");
-		list.add("/birthday");
-		return list;
-	}
-
-	/**
-	 * Get list of commands for bot
-	 * @return
-	 */
-	public UserMessageDto processBotStartingMessage(User user, UserMessageDto userMessageDto) {
-		String msgText = "Hello "+user.getName()+", \n Please select a option from the list to proceed further.";
-		userMessageDto.setMessage(msgText);
-
-		ArrayList<MessagePayloadChoiceDto> choices = new ArrayList<>();
-		getCommandsList().forEach(command -> {
-			MessagePayloadChoiceDto choice = MessagePayloadChoiceDto.builder()
-					.key("")
-					.text(command)
-					.build();
-			choices.add(choice);
-		});
-
-		MessagePayloadDto payload = MessagePayloadDto.builder()
-				.message(msgText)
-				.msgType(MessagePayloadType.TEXT)
-				.choices(choices)
-				.build();
-		userMessageDto.setPayload(payload);
-
-		return userMessageDto;
-	}
-
-	private UserMessageDto processInvalidRequest(UserMessageDto userMessageDto) {
-		String msgText = "We do not understand your request, please try: "+BotUtil.BOT_START_MSG;
-		userMessageDto.setMessage(msgText);
-
-		MessagePayloadDto payload = MessagePayloadDto.builder()
-				.message(msgText)
-				.msgType(MessagePayloadType.TEXT)
-				.build();
-		userMessageDto.setPayload(payload);
-
-		return userMessageDto;
-	}
 
 	/**
 	 * Find user by from field of user message object

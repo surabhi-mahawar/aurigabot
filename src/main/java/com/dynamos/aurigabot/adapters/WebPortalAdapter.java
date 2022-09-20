@@ -13,6 +13,7 @@ import com.dynamos.aurigabot.service.WebPortalService;
 import com.dynamos.aurigabot.utils.BotUtil;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 public class WebPortalAdapter implements AbstractAdapter {
@@ -51,8 +52,14 @@ public class WebPortalAdapter implements AbstractAdapter {
                 .title(userMessage.getMessage())
                 .msg_type("text")
                 .build();
-        if(userMessage.getPayload().getChoices() != null) {
-            payload.setChoices(userMessage.getPayload().getChoices());
+        if(userMessage.getPayload() != null && userMessage.getPayload().getChoices() != null) {
+            ArrayList choices = new ArrayList();
+            userMessage.getPayload().getChoices().forEach(item -> {
+                item.setKey("");
+                choices.add(item);
+            });
+
+            payload.setChoices(choices);
         }
 
         OutboundMessage outboundMessage = OutboundMessage.builder()
