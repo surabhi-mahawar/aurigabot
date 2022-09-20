@@ -1,5 +1,7 @@
 package com.dynamos.aurigabot.entity;
 
+import com.dynamos.aurigabot.enums.ChannelProvider;
+import com.dynamos.aurigabot.enums.MessageChannel;
 import com.dynamos.aurigabot.enums.Status;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -33,8 +35,13 @@ public class UserMessage {
     private String toSource;
     private UUID fromUserId;
     private UUID toUserId;
-    private String channel;
-    private String provider;
+
+    @Enumerated(EnumType.STRING)
+    private MessageChannel channel;
+
+    @Enumerated(EnumType.STRING)
+    private ChannelProvider provider;
+
     private int index;
     private String message;
 

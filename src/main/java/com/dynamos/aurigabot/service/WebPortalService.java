@@ -29,19 +29,20 @@ public class WebPortalService {
                 .body(Mono.just(outboundMessage), OutboundMessage.class)
                 .retrieve()
                 .bodyToMono(OutboundResponse.class)
-                .map(new Function<OutboundResponse, OutboundResponse>() {
-                    @Override
-                    public OutboundResponse apply(OutboundResponse webResponse) {
-                        if (webResponse != null) {
-                            System.out.println("MESSAGE RESPONSE " + webResponse.getMessage());
-                            System.out.println("STATUS RESPONSE " + webResponse.getStatus());
-                            System.out.println("MESSAGE ID RESPONSE " + webResponse.getId());
-                            return webResponse;
-                        } else {
-                            return null;
-                        }
-                    }
-                }).doOnError(new Consumer<Throwable>() {
+//                .map(new Function<OutboundResponse, OutboundResponse>() {
+//                    @Override
+//                    public OutboundResponse apply(OutboundResponse webResponse) {
+//                        if (webResponse != null) {
+//                            System.out.println("MESSAGE RESPONSE " + webResponse.getMessage());
+//                            System.out.println("STATUS RESPONSE " + webResponse.getStatus());
+//                            System.out.println("MESSAGE ID RESPONSE " + webResponse.getId());
+//                            return webResponse;
+//                        } else {
+//                            return null;
+//                        }
+//                    }
+//                })
+                .doOnError(new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) {
                         System.out.println("ERROR IS " + throwable.getLocalizedMessage());

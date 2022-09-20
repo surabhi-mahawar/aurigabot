@@ -7,9 +7,6 @@ public class BotUtil {
     public static String BOT_START_MSG = "Hi Auriga Bot";
     public static String USER_ADMIN = "admin";
     public static UUID USER_ADMIN_ID = UUID.fromString("89326ca8-f4cf-4756-b180-8636824345bd");
-    public static String PROVIDER_TRANSPORT_SOCKET = "transport-socket";
-    public static String CHANNEL_WEB = "web";
-    public static String CHANNEL_TELEGRAM = "telegram";
 
     /**
      * Get user message - message id value

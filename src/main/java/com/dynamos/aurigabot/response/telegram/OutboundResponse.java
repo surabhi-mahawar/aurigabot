@@ -1,4 +1,4 @@
-package com.dynamos.aurigabot.model.web;
+package com.dynamos.aurigabot.response.telegram;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OutboundResponse {
-    private String id;
-    private String status;
-    private String message;
+    private Boolean ok;
+    private Object result;
 }

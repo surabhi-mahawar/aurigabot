@@ -1,48 +1,47 @@
 package com.dynamos.aurigabot.adapters;
 
+import com.dynamos.aurigabot.dto.MessagePayloadDto;
 import com.dynamos.aurigabot.dto.UserMessageDto;
 import com.dynamos.aurigabot.enums.ChannelProvider;
 import com.dynamos.aurigabot.enums.MessageChannel;
 import com.dynamos.aurigabot.enums.MessagePayloadType;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
-import com.dynamos.aurigabot.dto.MessagePayloadDto;
-import com.dynamos.aurigabot.model.webPortal.InboundMessage;
-import com.dynamos.aurigabot.model.webPortal.OutbondMessagePayload;
-import com.dynamos.aurigabot.model.webPortal.OutboundMessage;
-import com.dynamos.aurigabot.response.webPortal.OutboundResponse;
-import com.dynamos.aurigabot.service.WebPortalService;
+import com.dynamos.aurigabot.model.telegram.OutboundMessage;
+import com.dynamos.aurigabot.response.telegram.OutboundResponse;
+import com.dynamos.aurigabot.service.TelegramService;
 import com.dynamos.aurigabot.utils.BotUtil;
 import reactor.core.publisher.Mono;
+import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.util.ArrayList;
 import java.util.function.Function;
 
-public class WebPortalAdapter implements AbstractAdapter {
-    private String outboundUrl;
+public class TelegramAdapter  implements AbstractAdapter {
+    private String outboundBaseUrl;
 
-    public WebPortalAdapter(String outboundUrl) {
-        this.outboundUrl = outboundUrl;
+    public TelegramAdapter(String outboundBaseUrl) {
+        this.outboundBaseUrl = outboundBaseUrl;
     }
 
     /**
-     * Convert received WebMessage object to UserMessage object
+     * Convert received Telegram Message object to UserMessage object
      * @param message
      * @return
      */
     public Mono<UserMessageDto> convertInboundMsgToMessageFormat(Object message){
-        InboundMessage webMsg = (InboundMessage) message;
+        Message telegramMsg = (Message) message;
 
         MessagePayloadDto payload = MessagePayloadDto.builder()
-                .message(webMsg.getBody())
+                .message(telegramMsg.getText())
                 .msgType(MessagePayloadType.TEXT)
                 .build();
 
         UserMessageDto userMsg = UserMessageDto.builder().build();
-        userMsg.setFromSource(webMsg.getFrom());
-        userMsg.setMessage(webMsg.getBody());
+        userMsg.setFromSource(telegramMsg.getFrom().getId().toString());
+        userMsg.setMessage(telegramMsg.getText());
         userMsg.setPayload(payload);
-        userMsg.setProvider(ChannelProvider.TRANSPORT_SOCKET);
-        userMsg.setChannel(MessageChannel.WEB);
+        userMsg.setProvider(ChannelProvider.TELEGRAM);
+        userMsg.setChannel(MessageChannel.TELEGRAM);
         userMsg.setStatus(UserMessageStatus.REPLIED);
 //        userMsg.setIndex(0);
         return Mono.just(userMsg);
@@ -54,42 +53,27 @@ public class WebPortalAdapter implements AbstractAdapter {
      * @return
      */
     public Object convertOutboundMsgFromMessageFormat(UserMessageDto userMessage) {
-        OutbondMessagePayload payload = OutbondMessagePayload.builder()
-                .title(userMessage.getMessage())
-                .msg_type("text")
-                .build();
-        if(userMessage.getPayload() != null && userMessage.getPayload().getChoices() != null) {
-            ArrayList choices = new ArrayList();
-            userMessage.getPayload().getChoices().forEach(item -> {
-                item.setKey("");
-                choices.add(item);
-            });
-
-            payload.setChoices(choices);
-        }
-
         OutboundMessage outboundMessage = OutboundMessage.builder()
-                .message(payload)
-                .to(userMessage.getToSource())
-                .messageId(BotUtil.getUserMessageId(""))
+                .text(userMessage.getMessage())
+                .chatId(userMessage.getToSource())
                 .build();
 
         return outboundMessage;
     }
 
     /**
-     * Send outbound message to web portal
+     * Send outbound message to telegram
      * @param userMessageDto
      * @return
      */
     public Mono<UserMessageDto> sendOutboundMessage(UserMessageDto userMessageDto) {
         OutboundMessage outboundMessage = (OutboundMessage) convertOutboundMsgFromMessageFormat(userMessageDto);
 
-        return (new WebPortalService()).sendOutboundMessage(this.outboundUrl, outboundMessage)
+        return (new TelegramService(outboundBaseUrl)).sendOutboundMessage(outboundMessage)
                 .map(new Function<OutboundResponse, UserMessageDto>() {
                     @Override
                     public UserMessageDto apply(OutboundResponse outboundResponse) {
-                        if(outboundResponse.getStatus().equals("OK")) {
+                        if(outboundResponse.getOk()) {
                             userMessageDto.setStatus(UserMessageStatus.SENT);
                         } else {
                             userMessageDto.setStatus(UserMessageStatus.NOT_SENT);

@@ -1,5 +1,7 @@
 package com.dynamos.aurigabot.dto;
 
+import com.dynamos.aurigabot.enums.ChannelProvider;
+import com.dynamos.aurigabot.enums.MessageChannel;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -18,8 +20,8 @@ public class UserMessageDto {
     private String toSource;
     private UUID fromUserId;
     private UUID toUserId;
-    private String channel;
-    private String provider;
+    private MessageChannel channel;
+    private ChannelProvider provider;
     private UUID commandId;
     private UUID flowId;
     private int index;
