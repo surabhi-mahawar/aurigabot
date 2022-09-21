@@ -19,8 +19,9 @@ public class UserController {
     private CustomUserService customUserService;
 
     @PostMapping(value = "/add")
-    public Mono<User> addNewUser(@RequestBody UserDto userDto){
-        return customUserService.addNewUser(userDto);
+    public Mono<HttpApiResponse> addNewUser(@RequestBody UserDto userDto){
+//        customUserService.validateUserDetails(userDto);
 
+        return null;
     }
 }

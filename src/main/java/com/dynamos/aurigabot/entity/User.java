@@ -18,11 +18,13 @@ import java.util.UUID;
 public class User implements Persistable {
     @Id
     private UUID id;
+    private String password;
     private String name;
     private String mobile;
     private String email;
     private String username;
     private Date dob;
+    private String role;
     private int employeeId;
 
 

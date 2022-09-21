@@ -3,12 +3,15 @@ package com.dynamos.aurigabot.service;
 import com.dynamos.aurigabot.dto.UserDto;
 import com.dynamos.aurigabot.entity.User;
 import com.dynamos.aurigabot.repository.UserRepository;
+import com.dynamos.aurigabot.response.HttpApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.security.InvalidParameterException;
 import java.util.UUID;
 
 @Service
@@ -46,6 +49,25 @@ public class CustomUserService {
 
          return userRepository.save(convertUserDtoToDao(admin)).block();
 
+    }
+
+    public Mono<HttpApiResponse> validateUserDetails(UserDto userDto){
+         String username = userDto.getUsername();
+         String email = userDto.getEmail();
+         String mobile = userDto.getMobile();
+         String name = userDto.getName();
+
+         String emailRegex = "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$";
+         String mobileRegex = "(0/91)?[7-9][0-9]{9}";
+
+//         if (username.isEmpty()){
+//             return HttpApiResponse.builder()
+//                     .status(HttpStatus.SC_LENGTH_REQUIRED)
+//                     .error("Invalid username")
+//                     .message("Please input valid username")
+//                     .build();
+//         }
+        return null;
     }
 
     public Mono<User> addNewUser(UserDto userDto){
