@@ -1,4 +1,4 @@
-package com.dynamos.aurigabot.config.services;
+package com.dynamos.aurigabot.config.security;
 
 import com.dynamos.aurigabot.entity.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -7,19 +7,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class CustomUserDetails implements UserDetails {
+public class UserDetailsSecurity implements UserDetails {
     private User user;
 
-    public CustomUserDetails(User user) {
-        super();
+    public UserDetailsSecurity(User user) {
         this.user = user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(user.getRole());
-        return List.of(simpleGrantedAuthority);
+        return Stream.of(simpleGrantedAuthority).collect(Collectors.toList());
     }
 
     @Override

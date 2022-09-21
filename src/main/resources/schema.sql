@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     username varchar(100) NOT NULL,
     employee_id integer NOT NULL UNIQUE,
     dob DATE,
+    password VARCHAR(100) NOT NULL,
+    role text NOT NULL,
     joined_on timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP

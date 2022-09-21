@@ -2,14 +2,17 @@ package com.dynamos.aurigabot.service;
 
 import com.dynamos.aurigabot.dto.UserDto;
 import com.dynamos.aurigabot.entity.User;
+import com.dynamos.aurigabot.enums.RoleType;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
 
 import java.security.InvalidParameterException;
 import java.util.UUID;
@@ -19,6 +22,8 @@ public class CustomUserService {
 
      @Autowired
      private UserRepository userRepository;
+     @Autowired
+     private PasswordEncoder passwordEncoder;
 
      public static User convertUserDtoToDao(UserDto userDto){
          System.out.println("Method called");
@@ -30,6 +35,8 @@ public class CustomUserService {
                  .username(userDto.getUsername())
                  .employeeId(userDto.getEmployeeId())
                  .email(userDto.getEmail())
+                 .password(userDto.getPassword())
+                 .role(userDto.getRole())
                  .build();
 
          ObjectMapper objectMapper = new ObjectMapper();
@@ -46,6 +53,8 @@ public class CustomUserService {
          admin.setEmail("superadmin@aurigait.com");
          admin.setUsername("superadmin");
          admin.setEmployeeId(101);
+         admin.setPassword(passwordEncoder.encode("password"));
+         admin.setRole(RoleType.ADMIN.name());
 
          return userRepository.save(convertUserDtoToDao(admin)).block();
 
