@@ -1,5 +1,6 @@
 package com.dynamos.aurigabot.entity;
 
+import com.dynamos.aurigabot.utils.BotUtil;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -27,17 +28,17 @@ public class User implements Persistable {
     private String role;
     private int employeeId;
 
-
-
     @Override
     @Transient
     public boolean isNew() {
-        return id == null  ;
+        /** Check for superadmin user id
+         * Reason - To insert superadmin user on application run with a specific id
+         */
+        if(id.equals(BotUtil.USER_ADMIN_ID)) {
+            return true;
+        }
+        return id == null;
     }
-
-
-
-
 
 //    @OneToOne(fetch = FetchType.LAZY, mappedBy = "users")
 //    private LeaveRequest leaveRequest;

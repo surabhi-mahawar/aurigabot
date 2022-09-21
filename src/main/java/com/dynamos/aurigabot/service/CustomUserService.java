@@ -5,6 +5,7 @@ import com.dynamos.aurigabot.entity.User;
 import com.dynamos.aurigabot.enums.RoleType;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
+import com.dynamos.aurigabot.utils.BotUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.http.HttpStatus;
@@ -46,19 +47,26 @@ public class CustomUserService {
      }
      public User addSuperAdmin(){
          System.out.println("Called");
-         UserDto admin = UserDto.builder().build();
-         admin.setId(UUID.fromString("89326ca8-f4cf-4756-b180-8636824345bd"));
-         admin.setName("superadmin");
-         admin.setMobile("9876543210");
-         admin.setEmail("superadmin@aurigait.com");
-         admin.setUsername("superadmin");
-         admin.setEmployeeId(101);
-         admin.setPassword(passwordEncoder.encode("password"));
-         admin.setRole(RoleType.ADMIN.name());
+         User existingUser = userRepository.findById(BotUtil.USER_ADMIN_ID).block();
+         if(existingUser == null) {
+             System.out.println("Inserting Superadmin User.");
 
-         return userRepository.save(convertUserDtoToDao(admin)).block();
+             UserDto admin = UserDto.builder().build();
+             admin.setId(BotUtil.USER_ADMIN_ID);
+             admin.setName("superadmin");
+             admin.setMobile("9876543210");
+             admin.setEmail("superadmin@aurigait.com");
+             admin.setUsername("superadmin");
+             admin.setEmployeeId(101);
+             admin.setPassword(passwordEncoder.encode("password"));
+             admin.setRole(RoleType.ADMIN.name());
 
-    }
+             return userRepository.save(convertUserDtoToDao(admin)).block();
+         } else {
+             System.out.println("Superadmin User already exists.");
+             return existingUser;
+         }
+     }
 
     public Mono<HttpApiResponse> validateUserDetails(UserDto userDto){
          String username = userDto.getUsername();
