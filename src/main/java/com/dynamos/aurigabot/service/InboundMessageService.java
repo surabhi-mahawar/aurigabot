@@ -49,7 +49,7 @@ public class InboundMessageService {
 							@Override
 							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
 
-								MessageService messageService = MessageService.builder().build();
+								MessageService messageService = MessageService.builder().userRepository(userRepository).build();
 								return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
 									@Override
 									public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {

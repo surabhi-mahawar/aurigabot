@@ -8,17 +8,25 @@ import com.dynamos.aurigabot.entity.UserMessage;
 import com.dynamos.aurigabot.enums.CommandType;
 import com.dynamos.aurigabot.enums.MessagePayloadType;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
+import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.utils.BotUtil;
 import lombok.Builder;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
+import java.util.function.Function;
 
 @Builder
 public class MessageService {
+
+    @Autowired
+    private UserRepository userRepository;
     /**
      * Process incoming message, return outgoing message
      * @param user
@@ -127,11 +135,55 @@ public class MessageService {
      */
     public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType) {
         if(commandType.equals(CommandType.BIRTHDAY)) {
-            return processInvalidRequest(userMessageDto);
+            return processMessageRequest( userMessageDto);
         } else {
             return processInvalidRequest(userMessageDto);
         }
     }
+
+    private Mono<UserMessageDto> processMessageRequest( UserMessageDto userMessageDto) {
+
+
+        SimpleDateFormat mdyFormat = new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Date currentDate = java.util.Date.from(Instant.now());
+        String dateStr = mdyFormat.format(currentDate);
+
+        java.util.Date dob2 = null;
+        try {
+            dob2 = mdyFormat.parse(dateStr);
+            return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
+
+
+                @Override
+                public UserMessageDto apply(List<User> users) {
+
+                    String message = "Please find the list of birthdays for todays.";
+
+                    for (User u : users){
+                        message += "\n"+u.getName();
+                        System.out.println(u.getDob());
+                    }
+                    userMessageDto.setMessage(message);
+                    MessagePayloadDto payload = MessagePayloadDto.builder()
+                            .message(message)
+                            .msgType(MessagePayloadType.TEXT)
+                            .build();
+
+                    userMessageDto.setPayload(payload);
+
+                    return userMessageDto;
+                }
+            });
+        } catch (ParseException e) {
+//            throw new RuntimeException(e);
+            return Mono.just(null);
+        }
+
+
+
+
+    }
+
 
     /**
      * Process unidentified/invalid request
