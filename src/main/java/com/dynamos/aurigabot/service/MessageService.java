@@ -160,12 +160,12 @@ public class MessageService {
                         message = "There's no birthday today";
                     } else {
                         message = "Please find the list of birthdays for todays.";
+                        for (User u : users){
+                            message += "\n"+u.getName();
+                            System.out.println(u.getDob());
+                        }
                     }
 
-                    for (User u : users){
-                        message += "\n"+u.getName();
-                        System.out.println(u.getDob());
-                    }
                     userMessageDto.setMessage(message);
                     MessagePayloadDto payload = MessagePayloadDto.builder()
                             .message(message)
