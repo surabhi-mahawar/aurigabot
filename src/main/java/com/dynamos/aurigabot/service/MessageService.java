@@ -12,10 +12,7 @@ import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.utils.BotUtil;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import reactor.core.publisher.Mono;
-
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -151,13 +148,19 @@ public class MessageService {
         java.util.Date dob2 = null;
         try {
             dob2 = mdyFormat.parse(dateStr);
+
             return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
 
 
                 @Override
                 public UserMessageDto apply(List<User> users) {
 
-                    String message = "Please find the list of birthdays for todays.";
+                    String message;
+                    if (users.size() == 0){
+                        message = "There's no birthday today";
+                    } else {
+                        message = "Please find the list of birthdays for todays.";
+                    }
 
                     for (User u : users){
                         message += "\n"+u.getName();
