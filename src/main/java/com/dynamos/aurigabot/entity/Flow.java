@@ -15,15 +15,14 @@ import java.util.UUID;
 public class Flow {
     @Id
     private UUID id;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="command_id")
-    private Command command;
+
+    private String commmandType;
 
 //    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
 //    private UserMessage message;
 
     private String question;
-    private Long index;
+    private Integer index;
 //    private Date createdAt;
 //    private Date updatedAt;
 

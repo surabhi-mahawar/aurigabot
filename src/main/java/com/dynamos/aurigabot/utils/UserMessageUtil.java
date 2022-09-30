@@ -2,12 +2,17 @@ package com.dynamos.aurigabot.utils;
 
 import com.dynamos.aurigabot.dto.UserMessageDto;
 import com.dynamos.aurigabot.entity.UserMessage;
+import com.dynamos.aurigabot.repository.FlowRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.r2dbc.postgresql.codec.Json;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class UserMessageUtil {
+
+    @Autowired
+    private static FlowRepository flowRepository;
     /**
      * Convert userMessageDto object to userMessage entity object
      * @param userMessageDto
@@ -23,8 +28,7 @@ public class UserMessageUtil {
                 .provider(userMessageDto.getProvider())
                 .message(userMessageDto.getMessage())
                 .status(userMessageDto.getStatus())
-                .command(null)
-                .flow(null)
+                .flow(flowRepository.findById(userMessageDto.getFlowId()).block())
                 .index(userMessageDto.getIndex())
                 .build();
 

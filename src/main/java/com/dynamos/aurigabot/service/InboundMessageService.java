@@ -8,6 +8,7 @@ import com.dynamos.aurigabot.enums.MessagePayloadType;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.dynamos.aurigabot.dto.MessagePayloadChoiceDto;
 import com.dynamos.aurigabot.dto.MessagePayloadDto;
+import com.dynamos.aurigabot.repository.FlowRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -28,6 +29,8 @@ public class InboundMessageService {
 	private UserRepository userRepository;
 	private UserMessageRepository userMessageRepository;
 
+	private FlowRepository flowRepository;
+
 	/**
 	 * Process inbound message & send reply to user
 	 * @param message
@@ -42,6 +45,7 @@ public class InboundMessageService {
 						userMessageDto.setFromUserId(user.getId());
 						userMessageDto.setToSource(BotUtil.USER_ADMIN);
 						userMessageDto.setToUserId(BotUtil.USER_ADMIN_ID);
+						System.out.println("This is id: "+userMessageDto.getFlowId());
 
 						UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
 
@@ -49,7 +53,7 @@ public class InboundMessageService {
 							@Override
 							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
 
-								MessageService messageService = MessageService.builder().userRepository(userRepository).build();
+								MessageService messageService = MessageService.builder().userRepository(userRepository).flowRepository(flowRepository).build();
 								return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
 									@Override
 									public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {

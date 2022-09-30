@@ -15,17 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS command (
-    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-    command_type VARCHAR(255) NOT NULL,
-    description text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS flow(
     id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-    command_id uuid REFERENCES command(id),
+    command_type text NOT NULL,
     question text NOT NULL,
     index integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -34,7 +26,6 @@ CREATE TABLE IF NOT EXISTS flow(
 
 CREATE TABLE IF NOT EXISTS user_message (
     id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
-    command_id uuid REFERENCES command(id),
     flow_id uuid REFERENCES flow(id),
     index int NOT NULL,
     from_user_id uuid REFERENCES users(id),

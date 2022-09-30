@@ -3,13 +3,17 @@ package com.dynamos.aurigabot.service;
 import com.dynamos.aurigabot.dto.MessagePayloadChoiceDto;
 import com.dynamos.aurigabot.dto.MessagePayloadDto;
 import com.dynamos.aurigabot.dto.UserMessageDto;
+import com.dynamos.aurigabot.entity.Flow;
 import com.dynamos.aurigabot.entity.User;
 import com.dynamos.aurigabot.entity.UserMessage;
 import com.dynamos.aurigabot.enums.CommandType;
 import com.dynamos.aurigabot.enums.MessagePayloadType;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
+import com.dynamos.aurigabot.repository.FlowRepository;
+import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.utils.BotUtil;
+import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
@@ -24,6 +28,17 @@ public class MessageService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private FlowRepository flowRepository;
+
+    @Autowired
+    private UserMessageRepository userMessageRepository;
+
+    @Autowired
+    private UserMessageUtil userMessageUtil;
+
+
     /**
      * Process incoming message, return outgoing message
      * @param user
@@ -132,56 +147,76 @@ public class MessageService {
      */
     public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType) {
         if(commandType.equals(CommandType.BIRTHDAY)) {
-            return processMessageRequest( userMessageDto);
+            return processBirthdayRequest( userMessageDto,"/birthday", 0);
         } else {
             return processInvalidRequest(userMessageDto);
         }
     }
 
-    private Mono<UserMessageDto> processMessageRequest( UserMessageDto userMessageDto) {
+    private Mono<UserMessageDto> processBirthdayRequest( UserMessageDto userMessageDto,String commandType, int index) {
+
+        return flowRepository.findByIndexAndCommandType(index,commandType).map(new Function<Flow, UserMessageDto>() {
+            @Override
+            public UserMessageDto apply(Flow flow) {
+                userMessageDto.setMessage(flow.getQuestion());
+
+                userMessageDto.setFlowId(flow.getId());
+                MessagePayloadDto payload = MessagePayloadDto.builder()
+                        .message(flow.getQuestion())
+                        .msgType(MessagePayloadType.TEXT)
+                        .build();
+
+                userMessageDto.setPayload(payload);
+
+                return userMessageDto;
+
+            }
+        });
 
 
-        SimpleDateFormat mdyFormat = new SimpleDateFormat("yyyy-MM-dd");
-        java.util.Date currentDate = java.util.Date.from(Instant.now());
-        String dateStr = mdyFormat.format(currentDate);
 
-        java.util.Date dob2 = null;
-        try {
-            dob2 = mdyFormat.parse(dateStr);
-
-            return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
-
-
-                @Override
-                public UserMessageDto apply(List<User> users) {
-
-                    String message;
-                    if (users.size() == 0){
-                        message = "There's no birthday today";
-                    } else {
-                        message = "Please find the list of birthdays for todays.";
-                        for (User u : users){
-                            message += "\n"+u.getName();
-                            System.out.println(u.getDob());
-                        }
-                    }
-
-                    userMessageDto.setMessage(message);
-                    MessagePayloadDto payload = MessagePayloadDto.builder()
-                            .message(message)
-                            .msgType(MessagePayloadType.TEXT)
-                            .build();
-
-                    userMessageDto.setPayload(payload);
-
-                    return userMessageDto;
-                }
-            });
-        } catch (ParseException e) {
-//            throw new RuntimeException(e);
-            return Mono.just(null);
-        }
-
+//        SimpleDateFormat mdyFormat = new SimpleDateFormat("yyyy-MM-dd");
+//        java.util.Date currentDate = java.util.Date.from(Instant.now());
+//        String dateStr = mdyFormat.format(currentDate);
+//
+//        java.util.Date dob2 = null;
+//        try {
+//            dob2 = mdyFormat.parse(dateStr);
+//
+//            return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
+//
+//
+//                @Override
+//                public UserMessageDto apply(List<User> users) {
+//
+//                    String message;
+////                    if (users.size() == 0){
+////                        message = "There's no birthday today";
+////                    } else {
+////                        message = "Please find the list of birthdays for todays.";
+////                        for (User u : users){
+////                            message += "\n"+u.getName();
+////                            System.out.println(u.getDob());
+////                        }
+////                    }
+//
+//
+//                    userMessageDto.setMessage(message);
+//                    MessagePayloadDto payload = MessagePayloadDto.builder()
+//                            .message(message)
+//                            .msgType(MessagePayloadType.TEXT)
+//                            .build();
+//
+//                    userMessageDto.setPayload(payload);
+//
+//                    return userMessageDto;
+//                }
+//            });
+//        } catch (ParseException e) {
+////            throw new RuntimeException(e);
+//            return Mono.just(null);
+//        }
+//
 
 
 
@@ -194,6 +229,8 @@ public class MessageService {
      * @return
      */
     private Mono<UserMessageDto> processInvalidRequest(UserMessageDto userMessageDto) {
+
+
         String msgText = "We do not understand your request, please try: "+BotUtil.BOT_START_MSG;
         userMessageDto.setMessage(msgText);
 

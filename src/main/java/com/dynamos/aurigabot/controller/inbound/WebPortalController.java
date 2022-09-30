@@ -3,6 +3,7 @@ package com.dynamos.aurigabot.controller.inbound;
 import com.dynamos.aurigabot.adapters.AbstractAdapter;
 import com.dynamos.aurigabot.adapters.WebPortalAdapter;
 import com.dynamos.aurigabot.model.webPortal.InboundMessage;
+import com.dynamos.aurigabot.repository.FlowRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -23,6 +24,9 @@ public class WebPortalController {
     @Autowired
     public UserMessageRepository userMessageRepository;
 
+    @Autowired
+    private FlowRepository flowRepository;
+
     @Value("${web.portal.url}")
     public String outboundUrl;
 
@@ -36,6 +40,7 @@ public class WebPortalController {
         InboundMessageService inboundMessageService = InboundMessageService.builder()
                 .adapter(adapter)
                 .userRepository(userRepository)
+                .flowRepository(flowRepository)
                 .userMessageRepository(userMessageRepository)
                 .build();
 

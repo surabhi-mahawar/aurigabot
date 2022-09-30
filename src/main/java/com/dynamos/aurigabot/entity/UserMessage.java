@@ -23,9 +23,10 @@ import java.util.UUID;
 public class UserMessage {
     @Id
     private UUID id;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "command_id")
-    private Command command;
+
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "command_id")
+//    private Command command;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="flow_id")
