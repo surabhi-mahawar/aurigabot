@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 public enum CommandType {
 	BIRTHDAY("/birthday"),
 	LEAVE("/leave"),
-	TODO("todo");
+	TODO("/todo");
 
 	private String commandType;
 

@@ -53,8 +53,15 @@ public class TelegramAdapter  implements AbstractAdapter {
      * @return
      */
     public Object convertOutboundMsgFromMessageFormat(UserMessageDto userMessage) {
+        StringBuilder text = new StringBuilder(userMessage.getMessage());
+        if(userMessage.getPayload() != null && userMessage.getPayload().getChoices() != null) {
+            ArrayList choices = new ArrayList();
+            userMessage.getPayload().getChoices().forEach(item -> {
+                text.append("\n").append(item.getText());
+            });
+        }
         OutboundMessage outboundMessage = OutboundMessage.builder()
-                .text(userMessage.getMessage())
+                .text(text.toString())
                 .chatId(userMessage.getToSource())
                 .build();
 

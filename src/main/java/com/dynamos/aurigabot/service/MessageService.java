@@ -153,73 +153,68 @@ public class MessageService {
         }
     }
 
+    /**
+     * Process /birthday command and return list of birthdays for today
+     * @param userMessageDto
+     * @param commandType
+     * @param index
+     * @return
+     */
     private Mono<UserMessageDto> processBirthdayRequest( UserMessageDto userMessageDto,String commandType, int index) {
-
-        return flowRepository.findByIndexAndCommandType(index,commandType).map(new Function<Flow, UserMessageDto>() {
-            @Override
-            public UserMessageDto apply(Flow flow) {
-                userMessageDto.setMessage(flow.getQuestion());
-
-                userMessageDto.setFlowId(flow.getId());
-                MessagePayloadDto payload = MessagePayloadDto.builder()
-                        .message(flow.getQuestion())
-                        .msgType(MessagePayloadType.TEXT)
-                        .build();
-
-                userMessageDto.setPayload(payload);
-
-                return userMessageDto;
-
-            }
-        });
-
-
-
-//        SimpleDateFormat mdyFormat = new SimpleDateFormat("yyyy-MM-dd");
-//        java.util.Date currentDate = java.util.Date.from(Instant.now());
-//        String dateStr = mdyFormat.format(currentDate);
+//        return flowRepository.findByIndexAndCommandType(index,commandType).map(new Function<Flow, UserMessageDto>() {
+//            @Override
+//            public UserMessageDto apply(Flow flow) {
+//                userMessageDto.setMessage(flow.getQuestion());
 //
-//        java.util.Date dob2 = null;
-//        try {
-//            dob2 = mdyFormat.parse(dateStr);
+//                userMessageDto.setFlowId(flow.getId());
+//                MessagePayloadDto payload = MessagePayloadDto.builder()
+//                        .message(flow.getQuestion())
+//                        .msgType(MessagePayloadType.TEXT)
+//                        .build();
 //
-//            return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
+//                userMessageDto.setPayload(payload);
 //
+//                return userMessageDto;
 //
-//                @Override
-//                public UserMessageDto apply(List<User> users) {
-//
-//                    String message;
-////                    if (users.size() == 0){
-////                        message = "There's no birthday today";
-////                    } else {
-////                        message = "Please find the list of birthdays for todays.";
-////                        for (User u : users){
-////                            message += "\n"+u.getName();
-////                            System.out.println(u.getDob());
-////                        }
-////                    }
-//
-//
-//                    userMessageDto.setMessage(message);
-//                    MessagePayloadDto payload = MessagePayloadDto.builder()
-//                            .message(message)
-//                            .msgType(MessagePayloadType.TEXT)
-//                            .build();
-//
-//                    userMessageDto.setPayload(payload);
-//
-//                    return userMessageDto;
-//                }
-//            });
-//        } catch (ParseException e) {
-////            throw new RuntimeException(e);
-//            return Mono.just(null);
-//        }
-//
+//            }
+//        });
+        SimpleDateFormat mdyFormat = new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Date currentDate = java.util.Date.from(Instant.now());
+        String dateStr = mdyFormat.format(currentDate);
 
+        java.util.Date dob2 = null;
+        try {
+            dob2 = mdyFormat.parse(dateStr);
 
+            return userRepository.findAllByDob(dob2).collectList().map(new Function<List<User>, UserMessageDto>() {
+                @Override
+                public UserMessageDto apply(List<User> users) {
 
+                    String message;
+                    if (users.size() == 0){
+                        message = "There's no birthday today";
+                    } else {
+                        message = "Please find the list of birthdays for todays.";
+                        for (User u : users){
+                            message += "\n"+u.getName();
+                        }
+                    }
+
+                    userMessageDto.setMessage(message);
+                    MessagePayloadDto payload = MessagePayloadDto.builder()
+                            .message(message)
+                            .msgType(MessagePayloadType.TEXT)
+                            .build();
+
+                    userMessageDto.setPayload(payload);
+
+                    return userMessageDto;
+                }
+            });
+        } catch (ParseException e) {
+//            throw new RuntimeException(e);
+            return Mono.just(null);
+        }
     }
 
 
@@ -229,8 +224,6 @@ public class MessageService {
      * @return
      */
     private Mono<UserMessageDto> processInvalidRequest(UserMessageDto userMessageDto) {
-
-
         String msgText = "We do not understand your request, please try: "+BotUtil.BOT_START_MSG;
         userMessageDto.setMessage(msgText);
 
