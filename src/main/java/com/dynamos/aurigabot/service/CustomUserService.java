@@ -50,7 +50,6 @@ public class CustomUserService {
          User existingUser = userRepository.findById(BotUtil.USER_ADMIN_ID).block();
          if(existingUser == null) {
              System.out.println("Inserting Superadmin User.");
-
              UserDto admin = UserDto.builder().build();
              admin.setId(BotUtil.USER_ADMIN_ID);
              admin.setName("superadmin");

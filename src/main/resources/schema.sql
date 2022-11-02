@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL,
     username varchar(100) NOT NULL,
     employee_id uuid DEFAULT uuid_generate_v4(),
+    telegram_chat_id VARCHAR(255) unique DEFAULT NULL,
     dob DATE,
     password VARCHAR(100) NOT NULL,
     role text NOT NULL,
