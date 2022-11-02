@@ -12,10 +12,12 @@ import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.dynamos.aurigabot.repository.FlowRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
+import com.dynamos.aurigabot.response.HttpApiResponse;
 import com.dynamos.aurigabot.utils.BotUtil;
 import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,7 +47,7 @@ public class MessageService {
      * @param incomingUserMessage
      * @return
      */
-    public Mono<UserMessageDto> processMessage(User user, UserMessage incomingUserMessage) {
+    public Mono<UserMessageDto> processMessage(List<User> user, UserMessage incomingUserMessage) {
         UserMessageDto outUserMessageDto = UserMessageDto.builder()
                 .fromUserId(incomingUserMessage.getToUserId())
                 .toUserId(incomingUserMessage.getFromUserId())
@@ -57,12 +59,68 @@ public class MessageService {
                 .status(UserMessageStatus.PENDING)
                 .build();
         CommandType commandType = isCommand(incomingUserMessage.getMessage());
-//        Mono<UserMessageDto> callback;
-        if(isBotStartingMessage(incomingUserMessage.getMessage())) {
-            return processBotStartingMessage(user, outUserMessageDto);
+        if(user.size() == 0){
+            return  userMessageRepository.findAllByToSourceAndStatusOrderBySentAt(incomingUserMessage.getFromSource(),UserMessageStatus.SENT.name()).collectList().map(new Function<List<UserMessage>, Mono<UserMessageDto>>(){
+                @Override
+                public Mono<UserMessageDto> apply(List<UserMessage> userMessages){
+                    if(userMessages.size()==0){
+                        return processUnregisteredRequest(outUserMessageDto);
+                    }
+                    else {
+                        if (userMessages.get(0).getFlowId().getCommmandType()=="\\regTelegramUser"){
+                            return userRepository.findFirstByEmail(incomingUserMessage.getMessage()).collectList().map(new Function<List<User>,Mono<UserMessageDto>>() {
+                                @Override
+                                public Mono<UserMessageDto> apply(List<User> users){
+                                    if(users.size()==0){
+                                        return processUnregisteredRequest(outUserMessageDto);
+                                    }
+                                    else{
+                                        users.get(0).setTelegramChatId(incomingUserMessage.getFromSource());
+                                        userRepository.save(users.get(0));
+                                        if (isBotStartingMessage(incomingUserMessage.getMessage())) {
+                                            return processBotStartingMessage(user.get(0), outUserMessageDto);
+                                        }
+                                        else if(commandType != null) {
+                                            return processCommand(user.get(0), outUserMessageDto, commandType);
+                                        }
+                                        else{
+                                            return processInvalidRequest(outUserMessageDto);
+                                        }
+                                    }
+//return null;
+                                }
+                            }).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
+                                @Override
+                                public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
+                                    return userMessageDtoMono;
+                                }
+                            });
+                        }
+                        else if (isBotStartingMessage(incomingUserMessage.getMessage())) {
+                            return processBotStartingMessage(user.get(0), outUserMessageDto);
+                        } else if(commandType != null) {
+                            return processCommand(user.get(0), outUserMessageDto, commandType);
+                        }
+                        else {
+                            return processInvalidRequest(outUserMessageDto);
+                        }
+                    }
+
+                }
+            }).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
+                @Override
+                public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
+                    return userMessageDtoMono;
+                }
+            });
+            }
+
+        else if (isBotStartingMessage(incomingUserMessage.getMessage())) {
+            return processBotStartingMessage(user.get(0), outUserMessageDto);
         } else if(commandType != null) {
-            return processCommand(user, outUserMessageDto, commandType);
-        }else {
+            return processCommand(user.get(0), outUserMessageDto, commandType);
+        }
+        else {
             return processInvalidRequest(outUserMessageDto);
         }
 
@@ -192,9 +250,9 @@ public class MessageService {
 
                     String message;
                     if (users.size() == 0){
-                        message = "There's no birthday today";
+                        message = "There are birthdays today";
                     } else {
-                        message = "Please find the list of birthdays for todays.";
+                        message = "Please find the list of birthdays for today.\n";
                         for (User u : users){
                             message += "\n"+u.getName();
                         }
@@ -234,5 +292,23 @@ public class MessageService {
         userMessageDto.setPayload(payload);
 
         return Mono.just(userMessageDto);
+    }
+    private Mono<UserMessageDto> processUnregisteredRequest(UserMessageDto userMessageDto) {
+        return flowRepository.findByIndexAndCommandType(0,"\\regTelegramUser").map(new Function<Flow, UserMessageDto>() {
+            @Override
+            public UserMessageDto apply(Flow flow) {
+                userMessageDto.setMessage(flow.getQuestion());
+
+                    userMessageDto.setFlowId(flow);
+                MessagePayloadDto payload = MessagePayloadDto.builder()
+                        .message(flow.getQuestion())
+                        .msgType(MessagePayloadType.TEXT)
+                        .build();
+
+                userMessageDto.setPayload(payload);
+
+                return userMessageDto;
+            }
+        });
     }
 }

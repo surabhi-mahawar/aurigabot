@@ -15,8 +15,10 @@ import com.dynamos.aurigabot.response.HttpApiResponse;
 import com.dynamos.aurigabot.utils.BotUtil;
 import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -39,22 +41,24 @@ public class InboundMessageService {
 		return adapter.convertInboundMsgToMessageFormat(message).map(new Function<UserMessageDto, Mono<Mono<Mono<Mono<HttpApiResponse>>>>>() {
 			@Override
 			public Mono<Mono<Mono<Mono<HttpApiResponse>>>> apply(UserMessageDto userMessageDto) {
-				return findUser(userMessageDto).map(new Function<User, Mono<Mono<Mono<HttpApiResponse>>>>() {
+					return findUser(userMessageDto).map(new Function<List<User>, Mono<Mono<Mono<HttpApiResponse>>>>() {
 					@Override
-					public Mono<Mono<Mono<HttpApiResponse>>> apply(User user) {
-						userMessageDto.setFromUserId(user.getId());
+					public Mono<Mono<Mono<HttpApiResponse>>> apply(List<User> users) {
+						if(users.size() > 0) {
+							userMessageDto.setFromUserId(users.get(0).getId());
+						}
 						userMessageDto.setToSource(BotUtil.USER_ADMIN);
 						userMessageDto.setToUserId(BotUtil.USER_ADMIN_ID);
 						System.out.println("This is id: "+userMessageDto.getFlowId());
 
 						UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
-
+						userMessageDao.setCreatedAt(LocalDateTime.now());
 						return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, Mono<Mono<HttpApiResponse>>>() {
 							@Override
 							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
 
-								MessageService messageService = MessageService.builder().userRepository(userRepository).flowRepository(flowRepository).build();
-								return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
+								MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).build();
+								return messageService.processMessage(users, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
 									@Override
 									public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
 										OutboundMessageService outboundMessageService = OutboundMessageService.builder()
@@ -100,19 +104,26 @@ public class InboundMessageService {
 	 * @param msg
 	 * @return
 	 */
-	private Mono<User> findUser(UserMessageDto msg) {
-		return userRepository.findFirstByMobile("7597185708");
-//		Long mobile;
-//		try{
-//			mobile = Long.parseLong(msg.getFromSource());
-//		} catch(Exception ex) {
-//			mobile = Long.valueOf("0");
-//		}
-//		if(mobile > 0) {
-//			return userRepository.findFirstByMobile(msg.getFromSource());
-//		} else {
-//			return userRepository.findFirstByEmail(msg.getFromSource());
-//		}
+	private Mono<List<User>> findUser(UserMessageDto msg) {
+//		return userRepository.findFirstByMobile("7597185708");
+
+	if (msg.getChannel().name() == "TELEGRAM"){
+	return userRepository.findByTelegramChatId(msg.getFromSource()).collectList();
+	}
+	else{
+		Long mobile;
+		try{
+			mobile = Long.parseLong(msg.getFromSource());
+		} catch(Exception ex) {
+			mobile = Long.valueOf("0");
+		}
+		if(mobile > 0) {
+			return userRepository.findFirstByMobile(msg.getFromSource()).collectList();
+		} else {
+			return userRepository.findFirstByEmail(msg.getFromSource()).collectList();
+		}
+	}
+
 	}
 
 

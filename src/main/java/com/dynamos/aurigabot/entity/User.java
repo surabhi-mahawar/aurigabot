@@ -26,7 +26,8 @@ public class User implements Persistable {
     private String username;
     private Date dob;
     private String role;
-    private int employeeId;
+    private UUID employeeId;
+    private String telegramChatId;
 
     @Override
     @Transient

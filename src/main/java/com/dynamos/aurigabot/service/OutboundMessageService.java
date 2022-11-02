@@ -11,6 +11,7 @@ import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.function.Function;
 
 @Builder
@@ -30,6 +31,8 @@ public class OutboundMessageService {
             @Override
             public Mono<HttpApiResponse> apply(UserMessageDto userMessageDto) {
                 UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
+                userMessageDao.setSentAt(LocalDateTime.now());
+                userMessageDao.setCreatedAt(LocalDateTime.now());
                 return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, HttpApiResponse>() {
                     @Override
                     public HttpApiResponse apply(UserMessage userMessage) {

@@ -1,7 +1,11 @@
 package com.dynamos.aurigabot.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.r2dbc.postgresql.codec.Json;
 import lombok.Builder;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -17,7 +21,10 @@ public class Flow {
     private UUID id;
 
     private String commmandType;
-
+    @Type(type = "jsonb")
+    @JsonSerialize
+    @JsonDeserialize
+    private Json payload;
 //    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
 //    private UserMessage message;
 

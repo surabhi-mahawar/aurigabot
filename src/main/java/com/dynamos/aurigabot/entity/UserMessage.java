@@ -9,12 +9,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.r2dbc.postgresql.codec.Json;
 import lombok.Builder;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import javax.persistence.*;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Builder
@@ -30,7 +34,7 @@ public class UserMessage {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="flow_id")
-    private Flow flow;
+    private Flow flowId;
 
     private String fromSource;
     private String toSource;
@@ -53,4 +57,12 @@ public class UserMessage {
 
     @Enumerated(EnumType.STRING)
     private UserMessageStatus status;
+
+    @CreatedDate
+    protected LocalDateTime createdAt;
+
+    private LocalDateTime sentAt;
+    private LocalDateTime receivedAt;
+    private LocalDateTime deliveredAt;
+    private LocalDateTime readAt;
 }

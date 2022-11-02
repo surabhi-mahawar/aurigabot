@@ -11,11 +11,13 @@ import java.util.UUID;
 public interface UserRepository extends R2dbcRepository<User, UUID> {
     Mono<User> findById(String id);
 
-    Mono<User> findFirstByMobile(String mobile);
+    Flux<User> findFirstByMobile(String mobile);
 
-    Mono<User> findFirstByEmail(String email);
+    Flux<User> findByTelegramChatId(String chatId);
+    Flux<User> findFirstByEmail(String   email);
 
-    @Query("select * from users where dob = $1")
+    //    @Query("select * from users where EXTRACT(day from dob) = EXTRACT(day from $1) and EXTRACT(month from dob) = EXTRACT(month from $1)")
+//    @Query("select * from users where EXTRACT(day from dob) = EXTRACT(day from $1) and EXTRACT(month from dob) = EXTRACT(month from $1)")
     Flux<User> findAllByDob(Date date);
 
 }

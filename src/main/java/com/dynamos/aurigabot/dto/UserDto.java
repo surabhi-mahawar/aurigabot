@@ -19,7 +19,7 @@ public class UserDto {
     private String email;
     private String username;
     private Date dob;
-    private int employeeId;
+    private UUID employeeId;
     private String password;
     private String role;
 }

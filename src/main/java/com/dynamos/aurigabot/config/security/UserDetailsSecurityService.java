@@ -19,7 +19,7 @@ public class UserDetailsSecurityService implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("Email:"+username);
-        User user = userRepository.findFirstByEmail(username).block();
+        User user = userRepository.findFirstByEmail(username).collectList().block().get(0);
         if (user == null ) {
             throw new UsernameNotFoundException("User Not Found with username: " + username);
         }
