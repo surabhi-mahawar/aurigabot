@@ -60,6 +60,7 @@ public class CustomUserService {
 //             admin.setEmployeeId(101);
              admin.setPassword(passwordEncoder.encode("password"));
              admin.setRole(RoleType.ADMIN.name());
+             admin.setEmployeeId(UUID.randomUUID());
 
              return userRepository.save(convertUserDtoToDao(admin)).block();
          } else {

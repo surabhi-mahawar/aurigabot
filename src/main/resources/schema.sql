@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     mobile varchar(10) NOT NULL,
     email VARCHAR(255) NOT NULL,
     username varchar(100) NOT NULL,
-    employee_id integer NOT NULL UNIQUE,
+    employee_id uuid DEFAULT uuid_generate_v4(),
     dob DATE,
     password VARCHAR(100) NOT NULL,
     role text NOT NULL,
