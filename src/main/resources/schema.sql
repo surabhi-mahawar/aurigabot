@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS user_message (
     received_at timestamp without time zone DEFAULT NULL,
     sent_at timestamp without time zone DEFAULT NULL,
     delivered_at timestamp without time zone DEFAULT NULL,
-    read_at timestamp without time zone DEFAULT NULL
+    read_at timestamp without time zone DEFAULT NULL,
+    created_at timestamp without time zone DEFAULT Null
 );
 
 CREATE TABLE IF NOT EXISTS leave_request (
