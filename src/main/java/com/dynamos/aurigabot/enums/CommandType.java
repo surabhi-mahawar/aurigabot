@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 public enum CommandType {
+	REGTELEGRAMUSER("/regTelegramUser"),
 	BIRTHDAY("/birthday"),
 	LEAVE("/leave"),
 	TODO("/todo");

@@ -67,7 +67,7 @@ public class MessageService {
                         return processUnregisteredRequest(outUserMessageDto);
                     }
                     else {
-                        if (userMessages.get(0).getFlowId().getCommmandType()=="\\regTelegramUser"){
+                        if (userMessages.get(0).getFlow() != null && userMessages.get(0).getFlow().getCommandType().equals(CommandType.REGTELEGRAMUSER)){
                             return userRepository.findFirstByEmail(incomingUserMessage.getMessage()).collectList().map(new Function<List<User>,Mono<UserMessageDto>>() {
                                 @Override
                                 public Mono<UserMessageDto> apply(List<User> users){
@@ -282,6 +282,10 @@ public class MessageService {
      * @return
      */
     private Mono<UserMessageDto> processInvalidRequest(UserMessageDto userMessageDto) {
+        return Mono.just(processInvalidRequestDto(userMessageDto));
+    }
+
+    private UserMessageDto processInvalidRequestDto(UserMessageDto userMessageDto) {
         String msgText = "We do not understand your request, please try: "+BotUtil.BOT_START_MSG;
         userMessageDto.setMessage(msgText);
 
@@ -291,23 +295,26 @@ public class MessageService {
                 .build();
         userMessageDto.setPayload(payload);
 
-        return Mono.just(userMessageDto);
+        return userMessageDto;
     }
     private Mono<UserMessageDto> processUnregisteredRequest(UserMessageDto userMessageDto) {
-        return flowRepository.findByIndexAndCommandType(0,"\\regTelegramUser").map(new Function<Flow, UserMessageDto>() {
+        return flowRepository.findByIndexAndCommandType(0, CommandType.REGTELEGRAMUSER.getDisplayValue()).collectList().map(new Function<List<Flow>, UserMessageDto>() {
             @Override
-            public UserMessageDto apply(Flow flow) {
-                userMessageDto.setMessage(flow.getQuestion());
+            public UserMessageDto apply(List<Flow> flow) {
+                if(flow.get(0) != null) {
+                    userMessageDto.setMessage(flow.get(0).getQuestion());
 
-                    userMessageDto.setFlowId(flow);
-                MessagePayloadDto payload = MessagePayloadDto.builder()
-                        .message(flow.getQuestion())
-                        .msgType(MessagePayloadType.TEXT)
-                        .build();
+                    userMessageDto.setFlow(flow.get(0));
+                    MessagePayloadDto payload = MessagePayloadDto.builder()
+                            .message(flow.get(0).getQuestion())
+                            .msgType(MessagePayloadType.TEXT)
+                            .build();
 
-                userMessageDto.setPayload(payload);
-
-                return userMessageDto;
+                    userMessageDto.setPayload(payload);
+                    return userMessageDto;
+                } else {
+                    return processInvalidRequestDto(userMessageDto);
+                }
             }
         });
     }

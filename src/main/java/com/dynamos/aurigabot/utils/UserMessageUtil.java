@@ -28,7 +28,7 @@ public class UserMessageUtil {
                 .provider(userMessageDto.getProvider())
                 .message(userMessageDto.getMessage())
                 .status(userMessageDto.getStatus())
-                .flowId(userMessageDto.getFlowId())
+                .flow(userMessageDto.getFlow())
                 .index(userMessageDto.getIndex())
                 .build();
 

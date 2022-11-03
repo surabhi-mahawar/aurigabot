@@ -2,6 +2,7 @@ package com.dynamos.aurigabot.service;
 
 import com.dynamos.aurigabot.adapters.AbstractAdapter;
 import com.dynamos.aurigabot.dto.UserMessageDto;
+import com.dynamos.aurigabot.entity.Flow;
 import com.dynamos.aurigabot.entity.UserMessage;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.dynamos.aurigabot.repository.FlowRepository;
@@ -41,7 +42,6 @@ public class OutboundMessageService {
                         } else {
                             response.setMessage("Reply message not sent to user.");
                         }
-
                         return response;
                     }
                 });

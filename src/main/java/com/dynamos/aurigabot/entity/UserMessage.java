@@ -7,8 +7,7 @@ import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.r2dbc.postgresql.codec.Json;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
@@ -21,20 +20,23 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
+@Setter
+@Getter
 @Builder
 @Data
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "user_message")
 public class UserMessage {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "command_id")
-//    private Command command;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="flow_id")
-    private Flow flowId;
+    @ManyToOne
+    @Column(name = "flow")
+    private Flow flow;
 
     private String fromSource;
     private String toSource;

@@ -24,7 +24,7 @@ public class UserMessageDto {
     private MessageChannel channel;
     private ChannelProvider provider;
     private UUID commandId;
-    private Flow flowId;
+    private Flow flow;
     private int index;
     private String message;
 

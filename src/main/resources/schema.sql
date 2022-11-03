@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS flow(
 
 CREATE TABLE IF NOT EXISTS user_message (
     id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
-    flow_id uuid REFERENCES flow(id),
+    flow uuid REFERENCES flow(id),
     index int NOT NULL,
     from_user_id uuid REFERENCES users(id),
     from_source text NOT NULL,

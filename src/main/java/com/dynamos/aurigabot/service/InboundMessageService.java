@@ -49,7 +49,7 @@ public class InboundMessageService {
 						}
 						userMessageDto.setToSource(BotUtil.USER_ADMIN);
 						userMessageDto.setToUserId(BotUtil.USER_ADMIN_ID);
-						System.out.println("This is id: "+userMessageDto.getFlowId());
+//						System.out.println("This is id: "+userMessageDto.getFlow().getId());
 
 						UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
 						userMessageDao.setCreatedAt(LocalDateTime.now());
