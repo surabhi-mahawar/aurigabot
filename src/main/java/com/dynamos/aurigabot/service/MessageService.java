@@ -162,10 +162,12 @@ public class MessageService {
     public List<Map<String, String>> getCommandsList() {
         List<Map<String, String>> list = new ArrayList<>();
         for (CommandType value : CommandType.values()) {
-            Map<String, String> data = new HashMap();
-            data.put("key", value.toString());
-            data.put("value", value.getDisplayValue());
-            list.add(data);
+            if(!value.equals(CommandType.REGTELEGRAMUSER)) {
+                Map<String, String> data = new HashMap();
+                data.put("key", value.toString());
+                data.put("value", value.getDisplayValue());
+                list.add(data);
+            }
         }
         return list;
     }
