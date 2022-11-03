@@ -14,6 +14,9 @@ import org.springframework.data.convert.ReadingConverter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Flow read converter
+ */
 @ReadingConverter
 public class FlowReadConverter implements Converter<Row, Flow> {
 
