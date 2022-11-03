@@ -90,8 +90,12 @@ public class MessageService {
                                     } else{
                                         User user = users.get(0);
                                         user.setTelegramChatId(incomingUserMessage.getFromSource());
-                                        userRepository.save(user);
-                                        return Mono.just(registeredTelegramUserDto(outUserMessageDto));
+                                        return userRepository.save(user).map(new Function<User, UserMessageDto>() {
+                                            @Override
+                                            public UserMessageDto apply(User user) {
+                                                return registeredTelegramUserDto(outUserMessageDto);
+                                            }
+                                        });
 
 //                                        if (isBotStartingMessage(incomingUserMessage.getMessage())) {
 //                                            return processBotStartingMessage(user, outUserMessageDto);
@@ -253,7 +257,7 @@ public class MessageService {
 
                     String message;
                     if (users.size() == 0){
-                        message = "There are birthdays today";
+                        message = "There are no birthdays today";
                     } else {
                         message = "Please find the list of birthdays for today.\n";
                         for (User u : users){

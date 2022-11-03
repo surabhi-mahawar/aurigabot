@@ -3,6 +3,7 @@ package com.dynamos.aurigabot.config;
 import com.dynamos.aurigabot.entity.converters.FlowReadConverter;
 import com.dynamos.aurigabot.entity.converters.UserMessageReadConverter;
 import com.dynamos.aurigabot.entity.converters.UserMessageWriteConverter;
+import com.dynamos.aurigabot.entity.converters.UserWriteConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
@@ -37,6 +38,7 @@ public class PostgresConfig {
         converters.add(new UserMessageWriteConverter());
         converters.add(new UserMessageReadConverter());
         converters.add(new FlowReadConverter());
+        converters.add(new UserWriteConverter());
         R2dbcDialect dialect = DialectResolver.getDialect(connectionFactory);
         return R2dbcCustomConversions.of(dialect, converters);
     }
