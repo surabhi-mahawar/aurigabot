@@ -4,6 +4,7 @@ import com.dynamos.aurigabot.adapters.AbstractAdapter;
 import com.dynamos.aurigabot.adapters.TelegramAdapter;
 import com.dynamos.aurigabot.adapters.WebPortalAdapter;
 import com.dynamos.aurigabot.repository.FlowRepository;
+import com.dynamos.aurigabot.repository.LeaveRequestRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -26,6 +27,9 @@ class TelegramBot extends TelegramLongPollingBot {
 
     @Autowired
     private FlowRepository flowRepository;
+
+    @Autowired
+    private LeaveRequestRepository leaveRequestRepository;
 
     String botToken;
     String botUsername;
@@ -65,6 +69,7 @@ class TelegramBot extends TelegramLongPollingBot {
                     .userRepository(userRepository)
                     .flowRepository(flowRepository)
                     .userMessageRepository(userMessageRepository)
+                    .leaveRequestRepository(leaveRequestRepository)
                     .build();
 
             HttpApiResponse response = HttpApiResponse.builder()

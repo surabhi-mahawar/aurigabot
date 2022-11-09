@@ -4,6 +4,7 @@ import com.dynamos.aurigabot.adapters.AbstractAdapter;
 import com.dynamos.aurigabot.adapters.WebPortalAdapter;
 import com.dynamos.aurigabot.model.webPortal.InboundMessage;
 import com.dynamos.aurigabot.repository.FlowRepository;
+import com.dynamos.aurigabot.repository.LeaveRequestRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -27,6 +28,9 @@ public class WebPortalController {
     @Autowired
     private FlowRepository flowRepository;
 
+    @Autowired
+    private LeaveRequestRepository leaveRequestRepository;
+
     @Value("${web.portal.url}")
     public String outboundUrl;
 
@@ -42,6 +46,7 @@ public class WebPortalController {
                 .userRepository(userRepository)
                 .flowRepository(flowRepository)
                 .userMessageRepository(userMessageRepository)
+                .leaveRequestRepository(leaveRequestRepository)
                 .build();
 
         HttpApiResponse response = HttpApiResponse.builder()

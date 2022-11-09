@@ -4,12 +4,12 @@ import com.dynamos.aurigabot.dto.MessagePayloadChoiceDto;
 import com.dynamos.aurigabot.dto.MessagePayloadDto;
 import com.dynamos.aurigabot.dto.UserMessageDto;
 import com.dynamos.aurigabot.entity.Flow;
+import com.dynamos.aurigabot.entity.LeaveRequest;
 import com.dynamos.aurigabot.entity.User;
 import com.dynamos.aurigabot.entity.UserMessage;
-import com.dynamos.aurigabot.enums.CommandType;
-import com.dynamos.aurigabot.enums.MessagePayloadType;
-import com.dynamos.aurigabot.enums.UserMessageStatus;
+import com.dynamos.aurigabot.enums.*;
 import com.dynamos.aurigabot.repository.FlowRepository;
+import com.dynamos.aurigabot.repository.LeaveRequestRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -17,11 +17,15 @@ import com.dynamos.aurigabot.utils.BotUtil;
 import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
@@ -40,6 +44,9 @@ public class MessageService {
     @Autowired
     private UserMessageUtil userMessageUtil;
 
+    @Autowired
+    private LeaveRequestRepository leaveRequestRepository;
+
 
     /**
      * Process incoming message, return outgoing message
@@ -47,7 +54,7 @@ public class MessageService {
      * @param incomingUserMessage
      * @return
      */
-    public Mono<UserMessageDto> processMessage(List<User> user, UserMessage incomingUserMessage) {
+    public Mono<UserMessageDto> processMessage(List<User> user, UserMessage incomingUserMessage) throws ParseException {
         UserMessageDto outUserMessageDto = UserMessageDto.builder()
                 .fromUserId(incomingUserMessage.getToUserId())
                 .toUserId(incomingUserMessage.getFromUserId())
@@ -59,10 +66,13 @@ public class MessageService {
                 .status(UserMessageStatus.PENDING)
                 .build();
         CommandType commandType = isCommand(incomingUserMessage.getMessage());
+
+
+        LeaveRequest leaveRequest = LeaveRequest.builder().build();
         /**
          * If user is not found, proceed with register telegram chat id of user flow
          */
-        if(user.size() == 0){
+        if(user.size() == 0 && incomingUserMessage.getChannel()== MessageChannel.TELEGRAM){
             return  userMessageRepository.findAllByToSourceAndStatusOrderBySentAt(incomingUserMessage.getFromSource(),UserMessageStatus.SENT.name()).collectList().map(new Function<List<UserMessage>, Mono<UserMessageDto>>(){
                 @Override
                 public Mono<UserMessageDto> apply(List<UserMessage> userMessages){
@@ -96,14 +106,6 @@ public class MessageService {
                                                 return registeredTelegramUserDto(outUserMessageDto);
                                             }
                                         });
-
-//                                        if (isBotStartingMessage(incomingUserMessage.getMessage())) {
-//                                            return processBotStartingMessage(user, outUserMessageDto);
-//                                        } else if(commandType != null) {
-//                                            return processCommand(user, outUserMessageDto, commandType);
-//                                        } else{
-//                                            return processInvalidRequest(outUserMessageDto);
-//                                        }
                                     }
                                 }
                             }).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
@@ -126,8 +128,16 @@ public class MessageService {
         } else if (isBotStartingMessage(incomingUserMessage.getMessage())) {
             return processBotStartingMessage(user.get(0), outUserMessageDto);
         } else if(commandType != null) {
-            return processCommand(user.get(0), outUserMessageDto, commandType);
-        } else {
+            return processCommand(user.get(0), outUserMessageDto, commandType,incomingUserMessage);
+        } else if(userMessageRepository.findAllByToSourceAndStatusOrderBySentAt(incomingUserMessage.getFromSource(),UserMessageStatus.SENT.name()).collectList().map(new Function<List<UserMessage>, Flow>() {
+            @Override
+            public Flow apply(List<UserMessage> userMessages) {
+                return userMessages.get(0).getFlow();
+            }
+        })!=null) {
+            return processCommand(user.get(0), outUserMessageDto, CommandType.LEAVE,incomingUserMessage);
+        }
+        else {
             return processInvalidRequest(outUserMessageDto);
         }
     }
@@ -210,10 +220,13 @@ public class MessageService {
      * @param commandType
      * @return
      */
-    public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType) {
+    public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType,UserMessage incomingMessageDto) {
         if(commandType.equals(CommandType.BIRTHDAY)) {
             return processBirthdayRequest( userMessageDto,"/birthday", 0);
-        } else {
+        } else if (commandType.equals(CommandType.LEAVE)) {
+            return processLeaveRequest(userMessageDto,"/leave",0,incomingMessageDto,user);
+        }
+        else {
             return processInvalidRequest(userMessageDto);
         }
     }
@@ -280,6 +293,162 @@ public class MessageService {
 //            throw new RuntimeException(e);
             return Mono.just(null);
         }
+    }
+
+    private Mono<UserMessageDto> processLeaveRequest( UserMessageDto userMessageDto,String commandType, int index,UserMessage incomingUserMessage,User user) {
+        return leaveRequestRepository.findByEmployeeId(user.getId()).collectList().map(new Function<List<LeaveRequest>, LeaveRequest>() {
+            @Override
+            public  LeaveRequest apply(List<LeaveRequest> leaveRequests) {
+                if (leaveRequests.size()==0){
+                    return LeaveRequest.builder().build();
+                }
+                else{
+                    return leaveRequests.get(0);
+                }
+            }
+        }).map(
+                new Function<LeaveRequest, Mono<UserMessageDto>>() {
+                    @Override
+                    public Mono<UserMessageDto> apply(LeaveRequest leaveRequest) {
+                        return userMessageRepository.findAllByToSourceAndStatusOrderBySentAt(userMessageDto.getToSource(),UserMessageStatus.SENT.name()).collectList().map(new Function<List<UserMessage>,Mono<Mono<UserMessageDto>>>() {
+                            @Override
+                            public Mono<Mono<UserMessageDto>> apply(List<UserMessage> userMessages) {
+                                if (userMessages.get(0).getFlow()==null){
+                                    return flowRepository.findByIndexAndCommandType(index, CommandType.LEAVE.getDisplayValue()).collectList().map(new Function<List<Flow>, Mono<UserMessageDto>>() {
+                                        @Override
+                                        public Mono<UserMessageDto> apply(List<Flow> flow) {
+                                            if(flow.size()!=0 ) {
+//
+                                                userMessageDto.setMessage(flow.get(index).getQuestion());
+
+                                                userMessageDto.setFlow(flow.get(index));
+                                                MessagePayloadDto payload = MessagePayloadDto.builder()
+                                                        .message(flow.get(0).getQuestion())
+                                                        .msgType(MessagePayloadType.TEXT)
+                                                        .build();
+
+                                                userMessageDto.setPayload(payload);
+                                                return Mono.just(userMessageDto);
+                                            } else {
+                                                return Mono.just(processInvalidRequestDto(userMessageDto));
+                                            }
+                                        }
+                                    });
+                                } else {
+
+                                    if (userMessages.get(0).getIndex()==3){
+                                        if(incomingUserMessage.getMessage().equals(LeaveType.CL.getDisplayValue())){
+                                            leaveRequest.setLeaveType(LeaveType.CL);
+                                        }
+                                        else {
+                                            leaveRequest.setLeaveType(LeaveType.PL);
+                                        }
+                                        return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, Mono<UserMessageDto>>() {
+                                            @Override
+                                            public Mono<UserMessageDto> apply(LeaveRequest leaveRequest) {
+                                                userMessageDto.setMessage("ALL DONE");
+                                                return Mono.just(userMessageDto);
+                                            }
+                                        });
+
+                                    }
+                                        return flowRepository.findByIndexAndCommandType(userMessages.get(0).getIndex()+1, CommandType.LEAVE.getDisplayValue()).collectList().map(new Function<List<Flow>, Mono<UserMessageDto>>() {
+                                        @Override
+                                        public Mono<UserMessageDto> apply(List<Flow> flow) {
+                                            if(flow.size()!=0 ) {
+                                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+                                                leaveRequest.setEmployeeId(user);
+                                                leaveRequest.setStatus(LeaveStatus.PENDING);
+                                                leaveRequest.setLeaveType(LeaveType.CL);
+                                                //todo: change/set approved by
+                                                userMessageDto.setMessage(flow.get(0).getQuestion());
+
+                                                userMessageDto.setFlow(flow.get(0));
+                                                MessagePayloadDto payload = MessagePayloadDto.builder()
+                                                        .message(flow.get(0).getQuestion())
+                                                        .msgType(MessagePayloadType.TEXT)
+                                                        .build();
+                                                userMessageDto.setIndex(flow.get(0).getIndex());
+                                                userMessageDto.setPayload(payload);
+                                                if (userMessages.get(0).getIndex()==0){
+                                                    leaveRequest.setReason(incomingUserMessage.getMessage());
+                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
+                                                        @Override
+                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
+                                                            return userMessageDto;
+                                                        }
+                                                    });
+                                                }
+                                                else if (userMessages.get(0).getIndex()==1){
+                                                    leaveRequest.setFromDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
+                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest,UserMessageDto>() {
+                                                        @Override
+                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
+                                                            return userMessageDto;
+                                                        }
+                                                    });
+
+                                                }
+                                                else if (userMessages.get(0).getIndex()==2){
+                                                    leaveRequest.setToDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
+                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
+                                                        @Override
+                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
+                                                            return userMessageDto;
+                                                        }
+                                                    });
+
+                                                }
+                                                else if (userMessages.get(0).getIndex()==3){
+                                                    if(incomingUserMessage.getMessage().equals(LeaveType.CL.name())){
+                                                        leaveRequest.setLeaveType(LeaveType.CL);
+                                                    }
+                                                    else {
+                                                        leaveRequest.setLeaveType(LeaveType.PL);
+                                                    }
+                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
+                                                        @Override
+                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
+                                                            return userMessageDto;
+                                                        }
+                                                    });
+
+                                                }
+                                                else {
+                                                    userMessageDto.setMessage("done");
+                                                    return Mono.just(userMessageDto);
+                                                }
+                                            } else {
+                                                userMessageDto.setMessage("done");
+                                                return Mono.just(userMessageDto);
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }).flatMap(new Function<Mono<Mono<UserMessageDto>>, Mono<? extends UserMessageDto>>() {
+                            @Override
+                            public Mono<? extends UserMessageDto> apply(Mono<Mono<UserMessageDto>> monoMono) {
+                                return monoMono.flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
+                                    @Override
+                                    public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
+                                        return userMessageDtoMono;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+        ).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
+            @Override
+            public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
+                return userMessageDtoMono;
+            }
+        });
+
+
+
     }
 
 

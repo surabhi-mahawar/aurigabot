@@ -49,10 +49,11 @@ CREATE TABLE IF NOT EXISTS user_message (
 CREATE TABLE IF NOT EXISTS leave_request (
     id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
     employee_id uuid REFERENCES users(id),
-    reason text NOT NULL,
-    from_date DATE NOT NULL,
-    to_date DATE NOT NULL,
-    status varchar(20)  NOT NULL,
+    reason text,
+    from_date DATE,
+    to_date DATE,
+    status varchar(20),
+    leave_type varchar(20),
     approved_by uuid REFERENCES users(id),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP

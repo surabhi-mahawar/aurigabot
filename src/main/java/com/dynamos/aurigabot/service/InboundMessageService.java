@@ -9,6 +9,7 @@ import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.dynamos.aurigabot.dto.MessagePayloadChoiceDto;
 import com.dynamos.aurigabot.dto.MessagePayloadDto;
 import com.dynamos.aurigabot.repository.FlowRepository;
+import com.dynamos.aurigabot.repository.LeaveRequestRepository;
 import com.dynamos.aurigabot.repository.UserMessageRepository;
 import com.dynamos.aurigabot.repository.UserRepository;
 import com.dynamos.aurigabot.response.HttpApiResponse;
@@ -18,6 +19,7 @@ import lombok.Builder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,8 @@ public class InboundMessageService {
 	private UserMessageRepository userMessageRepository;
 
 	private FlowRepository flowRepository;
+
+	private LeaveRequestRepository leaveRequestRepository;
 
 	/**
 	 * Process inbound message & send reply to user
@@ -57,18 +61,22 @@ public class InboundMessageService {
 							@Override
 							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
 
-								MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).build();
-								return messageService.processMessage(users, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
-									@Override
-									public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
-										OutboundMessageService outboundMessageService = OutboundMessageService.builder()
-												.adapter(adapter)
-												.userMessageRepository(userMessageRepository)
-												.build();
+								MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).leaveRequestRepository(leaveRequestRepository).build();
+								try {
+									return messageService.processMessage(users, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
+										@Override
+										public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
+											OutboundMessageService outboundMessageService = OutboundMessageService.builder()
+													.adapter(adapter)
+													.userMessageRepository(userMessageRepository)
+													.build();
 
-										return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
-									}
-								});
+											return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
+										}
+									});
+								} catch (ParseException e) {
+									throw new RuntimeException(e);
+								}
 							}
 						});
 					}
