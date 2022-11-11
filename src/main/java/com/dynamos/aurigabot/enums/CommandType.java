@@ -7,6 +7,7 @@ public enum CommandType {
 	REGTELEGRAMUSER("/regTelegramUser"),
 	BIRTHDAY("/birthday"),
 	LEAVE("/leave"),
+	DASHBOARD("/dashboard"),
 	TODO("/todo");
 
 	private String commandType;

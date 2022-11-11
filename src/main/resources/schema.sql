@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS flow(
     question text NOT NULL,
     index integer NOT NULL,
     payload jsonb DEFAULT NULL,
+    validation jsonb DEFAULT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );

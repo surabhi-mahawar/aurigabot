@@ -226,6 +226,9 @@ public class MessageService {
         } else if (commandType.equals(CommandType.LEAVE)) {
             return processLeaveRequest(userMessageDto,"/leave",0,incomingMessageDto,user);
         }
+        else if (commandType.equals(CommandType.DASHBOARD)) {
+            return processDashboardRequest(userMessageDto,"/dashboard",0,user);
+        }
         else {
             return processInvalidRequest(userMessageDto);
         }
@@ -268,11 +271,11 @@ public class MessageService {
                 @Override
                 public UserMessageDto apply(List<User> users) {
 
-                    String message;
+                    String message= userMessageDto.getMessage();
                     if (users.size() == 0){
-                        message = "There are no birthdays today";
+                        message+= "There are no birthdays today";
                     } else {
-                        message = "Please find the list of birthdays for today.\n";
+                        message += "Please find the list of birthdays for today.\n";
                         for (User u : users){
                             message += "\n"+u.getName();
                         }
@@ -293,6 +296,31 @@ public class MessageService {
 //            throw new RuntimeException(e);
             return Mono.just(null);
         }
+    }
+    private Mono<UserMessageDto> processDashboardRequest( UserMessageDto userMessageDto,String commandType, int index,User user) {
+
+        return leaveRequestRepository.findByEmployeeId(userMessageDto.getToUserId()).collectList().map(new Function<List<LeaveRequest>, Mono<UserMessageDto>>() {
+            //todo change text of the greeting message
+            String message="Hey!"+ user.getName() +"\n";
+    @Override
+    public Mono<UserMessageDto> apply(List<LeaveRequest> leaveRequests) {
+        if(leaveRequests.size()==0){
+            message+="There are no upcoming leaves requested by you\n";
+        }
+        else {
+            for(int i=0;i<leaveRequests.size();i++){
+                message+= leaveRequests.get(i).getFromDate().toString() + leaveRequests.get(i).getStatus()+"\n";
+            }
+        }
+        userMessageDto.setMessage(message);
+        return processBirthdayRequest(userMessageDto,"/birthday",0);
+    }
+}).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
+            @Override
+            public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
+                return userMessageDtoMono;
+            }
+        });
     }
 
     private Mono<UserMessageDto> processLeaveRequest( UserMessageDto userMessageDto,String commandType, int index,UserMessage incomingUserMessage,User user) {
@@ -346,7 +374,8 @@ public class MessageService {
                                         return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, Mono<UserMessageDto>>() {
                                             @Override
                                             public Mono<UserMessageDto> apply(LeaveRequest leaveRequest) {
-                                                userMessageDto.setMessage("ALL DONE");
+                                                //todo change the leave message
+                                                userMessageDto.setMessage("Your leave request has been submitted. thanks");
                                                 return Mono.just(userMessageDto);
                                             }
                                         });
