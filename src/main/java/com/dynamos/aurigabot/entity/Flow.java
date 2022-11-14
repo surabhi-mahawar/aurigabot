@@ -1,5 +1,7 @@
 package com.dynamos.aurigabot.entity;
 
+import com.dynamos.aurigabot.dto.MessagePayloadDto;
+import com.dynamos.aurigabot.dto.Validation;
 import com.dynamos.aurigabot.enums.CommandType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -36,6 +38,11 @@ public class Flow {
 
     private String question;
     private Integer index;
+
+    @Type(type = "jsonb")
+    @JsonSerialize
+    @JsonDeserialize
+    private Validation validation;
 //    private Date createdAt;
 //    private Date updatedAt;
 

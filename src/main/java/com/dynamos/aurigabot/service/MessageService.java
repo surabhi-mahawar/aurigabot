@@ -26,8 +26,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 @Builder
 public class MessageService {
@@ -301,7 +303,7 @@ public class MessageService {
 
         return leaveRequestRepository.findByEmployeeId(userMessageDto.getToUserId()).collectList().map(new Function<List<LeaveRequest>, Mono<UserMessageDto>>() {
             //todo change text of the greeting message
-            String message="Hey!"+ user.getName() +"\n";
+            String message="Hey! "+ user.getName() +"\n";
     @Override
     public Mono<UserMessageDto> apply(List<LeaveRequest> leaveRequests) {
         if(leaveRequests.size()==0){
@@ -346,7 +348,6 @@ public class MessageService {
                                         @Override
                                         public Mono<UserMessageDto> apply(List<Flow> flow) {
                                             if(flow.size()!=0 ) {
-//
                                                 userMessageDto.setMessage(flow.get(index).getQuestion());
 
                                                 userMessageDto.setFlow(flow.get(index));
@@ -365,28 +366,13 @@ public class MessageService {
                                 } else {
 
                                     if (userMessages.get(0).getIndex()==3){
-                                        if(incomingUserMessage.getMessage().equals(LeaveType.CL.getDisplayValue())){
-                                            leaveRequest.setLeaveType(LeaveType.CL);
-                                        }
-                                        else {
-                                            leaveRequest.setLeaveType(LeaveType.PL);
-                                        }
-                                        return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, Mono<UserMessageDto>>() {
-                                            @Override
-                                            public Mono<UserMessageDto> apply(LeaveRequest leaveRequest) {
-                                                //todo change the leave message
-                                                userMessageDto.setMessage("Your leave request has been submitted. thanks");
-                                                return Mono.just(userMessageDto);
-                                            }
-                                        });
+                                  return  Mono.just(processLeaveType(leaveRequest,userMessageDto,incomingUserMessage));
 
                                     }
                                         return flowRepository.findByIndexAndCommandType(userMessages.get(0).getIndex()+1, CommandType.LEAVE.getDisplayValue()).collectList().map(new Function<List<Flow>, Mono<UserMessageDto>>() {
                                         @Override
                                         public Mono<UserMessageDto> apply(List<Flow> flow) {
                                             if(flow.size()!=0 ) {
-                                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
                                                 leaveRequest.setEmployeeId(user);
                                                 leaveRequest.setStatus(LeaveStatus.PENDING);
                                                 leaveRequest.setLeaveType(LeaveType.CL);
@@ -400,48 +386,16 @@ public class MessageService {
                                                         .build();
                                                 userMessageDto.setIndex(flow.get(0).getIndex());
                                                 userMessageDto.setPayload(payload);
+//
                                                 if (userMessages.get(0).getIndex()==0){
-                                                    leaveRequest.setReason(incomingUserMessage.getMessage());
-                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
-                                                        @Override
-                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
-                                                            return userMessageDto;
-                                                        }
-                                                    });
+                                                    return processLeaveReason(leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
+
                                                 }
                                                 else if (userMessages.get(0).getIndex()==1){
-                                                    leaveRequest.setFromDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
-                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest,UserMessageDto>() {
-                                                        @Override
-                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
-                                                            return userMessageDto;
-                                                        }
-                                                    });
-
+                                                    return processLeaveDates(1,leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
                                                 }
                                                 else if (userMessages.get(0).getIndex()==2){
-                                                    leaveRequest.setToDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
-                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
-                                                        @Override
-                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
-                                                            return userMessageDto;
-                                                        }
-                                                    });
-
-                                                }
-                                                else if (userMessages.get(0).getIndex()==3){
-                                                    if(incomingUserMessage.getMessage().equals(LeaveType.CL.name())){
-                                                        leaveRequest.setLeaveType(LeaveType.CL);
-                                                    }
-                                                    else {
-                                                        leaveRequest.setLeaveType(LeaveType.PL);
-                                                    }
-                                                    return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
-                                                        @Override
-                                                        public UserMessageDto apply(LeaveRequest leaveRequest) {
-                                                            return userMessageDto;
-                                                        }
-                                                    });
+                                                  return processLeaveDates(2,leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
 
                                                 }
                                                 else {
@@ -490,6 +444,71 @@ public class MessageService {
         return Mono.just(processInvalidRequestDto(userMessageDto));
     }
 
+    private Mono<UserMessageDto> processLeaveType(LeaveRequest leaveRequest, UserMessageDto userMessageDto,UserMessage incomingUserMessage) {
+            if(incomingUserMessage.getMessage().equals(LeaveType.CL.getDisplayValue())){
+                leaveRequest.setLeaveType(LeaveType.CL);
+            }
+            else {
+                leaveRequest.setLeaveType(LeaveType.PL);
+            }
+            return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
+                @Override
+                public UserMessageDto apply(LeaveRequest leaveRequest) {
+                    //todo change the leave message
+                    userMessageDto.setMessage("Your leave request has been submitted. thanks");
+                    return userMessageDto;
+                }
+            });
+    }
+    private Mono<UserMessageDto> processLeaveReason(LeaveRequest leaveRequest, UserMessageDto userMessageDto,UserMessage incomingUserMessage,Flow flow) {
+        if(flow.getValidation()==null){
+            leaveRequest.setReason(incomingUserMessage.getMessage());
+        }
+        else{
+            Pattern p = Pattern.compile("^[a-zA-Z0-9!]*$");
+            boolean str = p.matcher(incomingUserMessage.getMessage()).matches();
+            if (str){
+                leaveRequest.setReason(incomingUserMessage.getMessage());
+            }
+            else{
+                userMessageDto.setMessage("please use only alphabets and numbers");
+                userMessageDto.setIndex(0);
+            }
+        }
+        return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, UserMessageDto>() {
+            @Override
+            public UserMessageDto apply(LeaveRequest leaveRequest) {
+                return userMessageDto;
+            }
+        });
+    }
+
+    private Mono<UserMessageDto> processLeaveDates(Integer index,LeaveRequest leaveRequest, UserMessageDto userMessageDto,UserMessage incomingUserMessage,Flow flow) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        if (flow.getValidation()==null){
+            try {if (index == 1) {
+                    leaveRequest.setFromDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
+
+                } else {
+                    leaveRequest.setToDate(LocalDate.parse(incomingUserMessage.getMessage(), formatter));
+
+                }
+            }
+            catch (DateTimeParseException e){
+                userMessageDto.setMessage("please enter the date in proper format i.e dd-mm-yyyy eg. 11-02-2000");
+                userMessageDto.setIndex(index);
+            }
+        }
+
+
+        return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest,UserMessageDto>() {
+            @Override
+            public UserMessageDto apply(LeaveRequest leaveRequest) {
+                return userMessageDto;
+            }
+        });
+    }
     private UserMessageDto processInvalidRequestDto(UserMessageDto userMessageDto) {
         String msgText = "We do not understand your request, please try: "+BotUtil.BOT_START_MSG;
         userMessageDto.setMessage(msgText);
@@ -547,4 +566,7 @@ public class MessageService {
             }
         });
     }
+//    private UserMessageDto validateInputs(Object validation,UserMessage incomingUserMessage) {
+//
+//    }
 }
