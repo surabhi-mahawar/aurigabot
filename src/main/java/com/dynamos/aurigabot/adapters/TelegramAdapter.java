@@ -8,8 +8,7 @@ import com.dynamos.aurigabot.enums.MessagePayloadType;
 import com.dynamos.aurigabot.enums.UserMessageStatus;
 import com.dynamos.aurigabot.model.telegram.OutboundMessage;
 import com.dynamos.aurigabot.response.telegram.OutboundResponse;
-import com.dynamos.aurigabot.service.TelegramService;
-import com.dynamos.aurigabot.utils.BotUtil;
+import com.dynamos.aurigabot.service.TelegramOutboundService;
 import reactor.core.publisher.Mono;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
@@ -76,7 +75,7 @@ public class TelegramAdapter  implements AbstractAdapter {
     public Mono<UserMessageDto> sendOutboundMessage(UserMessageDto userMessageDto) {
         OutboundMessage outboundMessage = (OutboundMessage) convertOutboundMsgFromMessageFormat(userMessageDto);
 
-        return (new TelegramService(outboundBaseUrl)).sendOutboundMessage(outboundMessage)
+        return (new TelegramOutboundService(outboundBaseUrl)).sendOutboundMessage(outboundMessage)
                 .map(new Function<OutboundResponse, UserMessageDto>() {
                     @Override
                     public UserMessageDto apply(OutboundResponse outboundResponse) {

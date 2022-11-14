@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 public enum LeaveType {
-    CL("casual"),
-    PL("paid");
+    CL("CL"),
+    PL("PL");
 
     private String leaveType;
 

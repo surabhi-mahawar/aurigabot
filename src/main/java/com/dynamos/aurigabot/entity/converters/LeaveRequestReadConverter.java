@@ -44,7 +44,7 @@ public class LeaveRequestReadConverter implements Converter<Row, LeaveRequest> {
                 .fromDate(source.get("from_date", LocalDate.class))
                 .reason(source.get("reason", String.class))
                 .status(LeaveStatus.valueOf(source.get("status", String.class)))
-                .leaveType(LeaveType.getEnumByValue(source.get("status", String.class)))
+                .leaveType(LeaveType.getEnumByValue(source.get("leave_type", String.class)))
                 .approvedBy(source.get("approved_by", UUID.class))
                 .build();
     }

@@ -46,40 +46,44 @@ public class InboundMessageService {
 			@Override
 			public Mono<Mono<Mono<Mono<HttpApiResponse>>>> apply(UserMessageDto userMessageDto) {
 					return findUser(userMessageDto).map(new Function<List<User>, Mono<Mono<Mono<HttpApiResponse>>>>() {
-					@Override
-					public Mono<Mono<Mono<HttpApiResponse>>> apply(List<User> users) {
-						if(users.size() > 0) {
-							userMessageDto.setFromUserId(users.get(0).getId());
-						}
-						userMessageDto.setToSource(BotUtil.USER_ADMIN);
-						userMessageDto.setToUserId(BotUtil.USER_ADMIN_ID);
-//						System.out.println("This is id: "+userMessageDto.getFlow().getId());
-
-						UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
-						userMessageDao.setCreatedAt(LocalDateTime.now());
-						return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, Mono<Mono<HttpApiResponse>>>() {
-							@Override
-							public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
-
-								MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).leaveRequestRepository(leaveRequestRepository).build();
-								try {
-									return messageService.processMessage(users, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
-										@Override
-										public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
-											OutboundMessageService outboundMessageService = OutboundMessageService.builder()
-													.adapter(adapter)
-													.userMessageRepository(userMessageRepository)
-													.build();
-
-											return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
-										}
-									});
-								} catch (ParseException e) {
-									throw new RuntimeException(e);
-								}
+						@Override
+						public Mono<Mono<Mono<HttpApiResponse>>> apply(List<User> users) {
+							if(users.size() > 0 && users.get(0) != null) {
+								userMessageDto.setFromUserId(users.get(0).getId());
 							}
-						});
-					}
+							userMessageDto.setToSource(BotUtil.USER_ADMIN);
+							userMessageDto.setToUserId(BotUtil.USER_ADMIN_ID);
+	//						System.out.println("This is id: "+userMessageDto.getFlow().getId());
+
+							UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
+							userMessageDao.setCreatedAt(LocalDateTime.now());
+							return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, Mono<Mono<HttpApiResponse>>>() {
+								@Override
+								public Mono<Mono<HttpApiResponse>> apply(UserMessage userMessage) {
+
+									MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).leaveRequestRepository(leaveRequestRepository).build();
+									try {
+										User user=null;
+										if(users.size() > 0 && users.get(0) != null) {
+											user = users.get(0);
+										}
+										return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
+											@Override
+											public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
+												OutboundMessageService outboundMessageService = OutboundMessageService.builder()
+														.adapter(adapter)
+														.userMessageRepository(userMessageRepository)
+														.build();
+
+												return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
+											}
+										});
+									} catch (ParseException e) {
+										throw new RuntimeException(e);
+									}
+								}
+							});
+						}
 				});
 			}
 		}).flatMap(new Function<Mono<Mono<Mono<Mono<HttpApiResponse>>>>, Mono<? extends HttpApiResponse>>() {

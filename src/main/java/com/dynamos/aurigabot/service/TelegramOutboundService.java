@@ -6,12 +6,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class TelegramService {
+public class TelegramOutboundService {
     private final WebClient webClient;
 
-    public TelegramService(String baseUrl) {
+    public TelegramOutboundService(String baseUrl) {
         this.webClient = WebClient.builder().baseUrl(baseUrl).build();
     }
 
