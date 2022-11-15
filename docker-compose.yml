@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  aurigabotdb:
+    container_name: aurigabotdb
+    image: postgres:14.1-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: aurigabotdb
+    ports:
+      - "0.0.0.0:5435:5432"
+    volumes:
+      - db-aurigabotdb:/var/lib/postgresql/data
+
+  aurigabot:
+    container_name: aurigabot
+    image: "surabhidocker28/aurigabot:v1"
+    restart: always
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "0.0.0.0:8080:8080"
+
+volumes:
+  db-aurigabotdb:
+    driver: local
