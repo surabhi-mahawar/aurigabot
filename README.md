@@ -4,6 +4,7 @@
 ### Quick summary ###
 * A generic chatbot which can be extended to different (like telegram, google-chat, etc) which can perform multiple functionalities and can be used by members for general queries, leave application, birthday notification etc.
 <br/><br/>
+* This is currently developed for telegram, we will expand it to use in whatsapp in future.
 
 ### Inspiration ###
 * We faced a lot of issues when accessing our work mails due to a lot of irrelevant mails like birthday, new joining, work anniversary and other mails and leave applications.
@@ -14,22 +15,21 @@
 * Maven
 * Spring Boot
 * Spring Data
-* JPA
-* MySql
-* N8N
+* Reactive Stack
+* WebFlux
+* R2DBC
+* PostgreSQL
 
 ### Commands ###
 * /dashboard- personalized message to show useful information.
 * /birthday- show list of people having birthday on that day.
-* /surveys-bot will reply with a message/heading of survey of available surveys.
-* /todo- bot will send list of todos in sorted form and also sends a button to create a new todo.
-* /leaverequest- bot asks certain question for sending leave application.
-* /helpdesk- we can submit a query/complaint to helpdesk.
+* /leave- bot asks certain question for sending leave application.
+* /todo- coming soon.
 
-<img src="src/main/resources/static/readme.png">
+<img src="src/main/resources/static/demo.png">
 
 ### Future Scope ###
-* Adapters
+* Whatsapp Adapters
 * Additional functionalities using buttons to different commands
 * Leave Request
 * TODO List
@@ -37,6 +37,3 @@
 * Surveys
 * Add more functionalities to birthday command
 * Notification Bot
-
-### Arhitecture ###
-<img src="src/main/resources/static/architecture.png">
