@@ -26,6 +26,7 @@ public class AdminController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
     @Autowired
     private CustomUserService customUserService;
 

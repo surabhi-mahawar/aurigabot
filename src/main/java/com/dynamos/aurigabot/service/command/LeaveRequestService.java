@@ -37,7 +37,7 @@ public class LeaveRequestService {
      * @param lastSentMessage
      * @return
      */
-    public Mono<UserMessageDto> processLeaveRequest(User user, UserMessage incomingUserMessage, UserMessageDto outUserMessageDto, UserMessage lastSentMessage) {
+    public Mono<UserMessageDto> processApplyLeaveRequest(User user, UserMessage incomingUserMessage, UserMessageDto outUserMessageDto, UserMessage lastSentMessage) {
         if(lastSentMessage != null && lastSentMessage.getFlow().getCommandType().equals(CommandType.LEAVE)) {
             Flow lastFlow = lastSentMessage.getFlow();
             Integer lastIndex = lastSentMessage.getIndex();
@@ -177,112 +177,6 @@ public class LeaveRequestService {
             });
         }
     }
-
-//    public Mono<UserMessageDto> processLeaveRequest1(UserMessageDto userMessageDto, int index, UserMessage incomingUserMessage, User user) {
-//        return leaveRequestRepository.findByEmployeeId(user.getId()).collectList().map(new Function<List<LeaveRequest>, LeaveRequest>() {
-//            @Override
-//            public  LeaveRequest apply(List<LeaveRequest> leaveRequests) {
-//                if (leaveRequests.size()==0){
-//                    return LeaveRequest.builder().build();
-//                }
-//                else{
-//                    return leaveRequests.get(0);
-//                }
-//            }
-//        }).map(
-//                new Function<LeaveRequest, Mono<UserMessageDto>>() {
-//                    @Override
-//                    public Mono<UserMessageDto> apply(LeaveRequest leaveRequest) {
-//                        return userMessageRepository.findAllByToSourceAndStatusOrderBySentAt(userMessageDto.getToSource(), UserMessageStatus.SENT.name()).collectList().map(new Function<List<UserMessage>,Mono<Mono<UserMessageDto>>>() {
-//                            @Override
-//                            public Mono<Mono<UserMessageDto>> apply(List<UserMessage> userMessages) {
-//                                if (userMessages.get(0).getFlow()==null){
-//                                    return flowRepository.findByIndexAndCommandType(index, CommandType.LEAVE.getDisplayValue()).collectList().map(new Function<List<Flow>, Mono<UserMessageDto>>() {
-//                                        @Override
-//                                        public Mono<UserMessageDto> apply(List<Flow> flow) {
-//                                            if(flow.size()!=0 ) {
-//                                                userMessageDto.setMessage(flow.get(index).getQuestion());
-//
-//                                                userMessageDto.setFlow(flow.get(index));
-//                                                MessagePayloadDto payload = MessagePayloadDto.builder()
-//                                                        .message(flow.get(0).getQuestion())
-//                                                        .msgType(MessagePayloadType.TEXT)
-//                                                        .build();
-//
-//                                                userMessageDto.setPayload(payload);
-//                                                return Mono.just(userMessageDto);
-//                                            } else {
-//                                                return Mono.just(BotUtil.getInvalidRequestMessageDto(userMessageDto));
-//                                            }
-//                                        }
-//                                    });
-//                                } else {
-//
-//                                    if (userMessages.get(0).getIndex()==3){
-//                                        return  Mono.just(processLeaveType(leaveRequest,userMessageDto,incomingUserMessage));
-//
-//                                    }
-//                                    return flowRepository.findByIndexAndCommandType(userMessages.get(0).getIndex()+1, CommandType.LEAVE.getDisplayValue()).collectList().map(new Function<List<Flow>, Mono<UserMessageDto>>() {
-//                                        @Override
-//                                        public Mono<UserMessageDto> apply(List<Flow> flow) {
-//                                            if(flow.size()!=0 ) {
-//                                                leaveRequest.setEmployeeId(user);
-//                                                leaveRequest.setStatus(LeaveStatus.PENDING);
-//                                                leaveRequest.setLeaveType(LeaveType.CL);
-//                                                //todo: change/set approved by
-//                                                userMessageDto.setMessage(flow.get(0).getQuestion());
-//
-//                                                userMessageDto.setFlow(flow.get(0));
-//                                                MessagePayloadDto payload = MessagePayloadDto.builder()
-//                                                        .message(flow.get(0).getQuestion())
-//                                                        .msgType(MessagePayloadType.TEXT)
-//                                                        .build();
-//                                                userMessageDto.setIndex(flow.get(0).getIndex());
-//                                                userMessageDto.setPayload(payload);
-////
-//                                                if (userMessages.get(0).getIndex()==0){
-//                                                    return processLeaveReason(leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
-//
-//                                                }
-//                                                else if (userMessages.get(0).getIndex()==1){
-//                                                    return processLeaveDates(1,leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
-//                                                }
-//                                                else if (userMessages.get(0).getIndex()==2){
-//                                                    return processLeaveDates(2,leaveRequest,userMessageDto,incomingUserMessage,flow.get(0));
-//
-//                                                }
-//                                                else {
-//                                                    userMessageDto.setMessage("done");
-//                                                    return Mono.just(userMessageDto);
-//                                                }
-//                                            } else {
-//                                                userMessageDto.setMessage("done");
-//                                                return Mono.just(userMessageDto);
-//                                            }
-//                                        }
-//                                    });
-//                                }
-//                            }
-//                        }).flatMap(new Function<Mono<Mono<UserMessageDto>>, Mono<? extends UserMessageDto>>() {
-//                            @Override
-//                            public Mono<? extends UserMessageDto> apply(Mono<Mono<UserMessageDto>> monoMono) {
-//                                return monoMono.flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
-//                                    @Override
-//                                    public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
-//                                        return userMessageDtoMono;
-//                                    }
-//                                });
-//                            }
-//                        });
-//                    }
-//                }
-//        ).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
-//            @Override
-//            public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
-//                return userMessageDtoMono;
-//            }
-//        });
-//    }
 
     /**
      * Get Flow by index

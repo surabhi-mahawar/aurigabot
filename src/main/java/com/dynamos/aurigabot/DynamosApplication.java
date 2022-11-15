@@ -12,8 +12,8 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 public class DynamosApplication implements ApplicationRunner {
 
 
-	@Autowired
-	private CustomUserService customUserService;
+//	@Autowired
+//	private CustomUserService customUserService;
 	public static void main(String[] args) {
 
 		SpringApplication.run(DynamosApplication.class, args);
@@ -24,7 +24,7 @@ public class DynamosApplication implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
-		customUserService.addSuperAdmin();
+//		customUserService.addSuperAdmin();
 	}
 }
 

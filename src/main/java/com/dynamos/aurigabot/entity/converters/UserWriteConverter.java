@@ -25,8 +25,11 @@ public class UserWriteConverter implements Converter<User, OutboundRow> {
             row.put("id", Parameter.from(UUID.randomUUID()));
         }
 
-        Date sqlDob = user.getDob();
-        java.util.Date utilDob = new java.util.Date(sqlDob.getTime());
+        java.util.Date utilDob = null;
+        if(user.getDob() != null) {
+            Date sqlDob = user.getDob();
+            utilDob = new java.util.Date(sqlDob.getTime());
+        }
 
         row.put("name", Parameter.fromOrEmpty(user.getName(), String.class));
         row.put("email", Parameter.fromOrEmpty(user.getEmail(), String.class));

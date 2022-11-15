@@ -56,7 +56,6 @@ public class CustomUserService {
              admin.setMobile("9876543210");
              admin.setEmail("superadmin@aurigait.com");
              admin.setUsername("superadmin");
-//             admin.setEmployeeId(101);
              admin.setPassword(passwordEncoder.encode("password"));
              admin.setRole(RoleType.ADMIN.name());
              admin.setEmployeeId(UUID.randomUUID());

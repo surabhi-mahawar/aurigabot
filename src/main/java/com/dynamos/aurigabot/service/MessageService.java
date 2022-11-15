@@ -16,7 +16,6 @@ import com.dynamos.aurigabot.service.command.TelegramService;
 import com.dynamos.aurigabot.utils.BotUtil;
 import com.dynamos.aurigabot.utils.UserMessageUtil;
 import lombok.Builder;
-import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.util.*;
@@ -24,22 +23,11 @@ import java.util.function.Function;
 
 @Builder
 public class MessageService {
-
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
     private FlowRepository flowRepository;
-
-    @Autowired
     private UserMessageRepository userMessageRepository;
-
-    @Autowired
     private UserMessageUtil userMessageUtil;
-
-    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
-
 
     /**
      * Process incoming message, return outgoing message
@@ -79,13 +67,13 @@ public class MessageService {
             return getLastSentMessage(incomingUserMessage.getFromSource()).map(new Function<UserMessage, Mono<UserMessageDto>>() {
                 @Override
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
-                    if(lastMessage.getFlow().getCommandType().equals(CommandType.LEAVE)) {
+                    if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVE)) {
                         LeaveRequestService leaveRequestService = LeaveRequestService.builder()
                                 .userMessageRepository(userMessageRepository)
                                 .flowRepository(flowRepository)
                                 .leaveRequestRepository(leaveRequestRepository)
                                 .build();
-                        return leaveRequestService.processLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
+                        return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
                     } else {
                         return processInvalidRequest(outUserMessageDto);
                     }
@@ -125,7 +113,7 @@ public class MessageService {
      * @return
      */
     public Mono<UserMessageDto> processBotStartingMessage(User user, UserMessageDto userMessageDto) {
-        String msgText = "Hello "+user.getName()+", \n Please select a option from the list to proceed further.";
+        String msgText = "Hello "+user.getName()+", \n Please select a option from the list to proceed further.\n";
         userMessageDto.setMessage(msgText);
 
         MessagePayloadDto payload = MessagePayloadDto.builder()
@@ -157,13 +145,15 @@ public class MessageService {
                     .flowRepository(flowRepository)
                     .leaveRequestRepository(leaveRequestRepository)
                     .build();
-            return leaveRequestService.processLeaveRequest(user, incomingMessageDto, userMessageDto, null);
+            return leaveRequestService.processApplyLeaveRequest(user, incomingMessageDto, userMessageDto, null);
         } else if (commandType.equals(CommandType.DASHBOARD)) {
             DashboardService dashboardService = DashboardService.builder()
                     .userRepository(userRepository)
                     .leaveRequestRepository(leaveRequestRepository)
                     .build();
             return dashboardService.processDashboardRequest(userMessageDto,"/dashboard",0,user);
+        } else if (commandType.equals(CommandType.TODO)) {
+            return processToDoRequest(userMessageDto);
         } else {
             return processInvalidRequest(userMessageDto);
         }
@@ -176,5 +166,18 @@ public class MessageService {
      */
     private Mono<UserMessageDto> processInvalidRequest(UserMessageDto userMessageDto) {
         return Mono.just(BotUtil.getInvalidRequestMessageDto(userMessageDto));
+    }
+
+    private Mono<UserMessageDto> processToDoRequest(UserMessageDto userMessageDto) {
+        String msgText = "This feature is coming soon!";
+        userMessageDto.setMessage(msgText);
+
+        MessagePayloadDto payload = MessagePayloadDto.builder()
+                .message(msgText)
+                .msgType(MessagePayloadType.TEXT)
+                .build();
+        userMessageDto.setPayload(payload);
+
+        return Mono.just(userMessageDto);
     }
 }
