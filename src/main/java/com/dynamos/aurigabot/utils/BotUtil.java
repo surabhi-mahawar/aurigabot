@@ -92,7 +92,7 @@ public class BotUtil {
      * @return
      */
     public static UserMessageDto getInvalidRequestMessageDto(UserMessageDto userMessageDto) {
-        String msgText = "We do not understand your request, please try below commands: ";
+        String msgText = "We do not understand your request, please select one choice from the list below: ";
         userMessageDto.setMessage(msgText);
 
         MessagePayloadDto payload = MessagePayloadDto.builder()

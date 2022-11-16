@@ -118,7 +118,7 @@ public class TelegramService {
      * @return
      */
     private UserMessageDto getRegistrationSuccessfulMessageDto(UserMessageDto userMessageDto) {
-        String msgText = "You have been successfully registered, Please select one choice from the list below.\n";
+        String msgText = "Your identity is confirmed, Please select one choice from the list below.\n";
         userMessageDto.setMessage(msgText);
 
         MessagePayloadDto payload = MessagePayloadDto.builder()

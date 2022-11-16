@@ -10,4 +10,4 @@ insert into flow (command_type, question, index, payload) values ('/leave', 'Ple
 
 insert into flow (command_type, question, index, payload) values ('/leave', 'Please enter the leave type', 3, '{"question": "Please enter the leave type", "questionType": "TEXT", "choices": [{"key": "CL", "text": "CL"}, {"key": "PL", "text": "PL"}], "media_url": null}');
 
-insert into flow (command_type, question, index, payload) values ('/regTelegramUser', 'Please enter your email id', 0, '{"question": "Please enter your email id", "questionType": "TEXT", "choices": null, "media_url": null}');
+insert into flow (command_type, question, index, payload) values ('/regTelegramUser', 'We do not recognize you, Please enter your email id to confirm your identity.', 0, '{"question": "Please enter your email id", "questionType": "TEXT", "choices": null, "media_url": null}');
