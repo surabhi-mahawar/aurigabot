@@ -18,7 +18,7 @@ services:
 
   aurigabot:
     container_name: aurigabot
-    image: "surabhidocker28/aurigabot:v2"
+    image: "surabhidocker28/aurigabot:v4"
     restart: always
     env_file: .env
     healthcheck:
