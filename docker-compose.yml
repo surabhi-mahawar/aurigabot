@@ -16,20 +16,20 @@ services:
     networks:
       - mynet
 
-  # aurigabot:
-  #   container_name: aurigabot
-  #   image: "surabhidocker28/aurigabot:v1"
-  #   restart: always
-  #   env_file: .env
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080"]
-  #     interval: 60s
-  #     timeout: 10s
-  #     retries: 5
-  #   ports:
-  #     - "0.0.0.0:8080:8080"
-  #   networks:
-  #     - mynet
+  aurigabot:
+    container_name: aurigabot
+    image: "surabhidocker28/aurigabot:v1"
+    restart: always
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "0.0.0.0:8080:8080"
+    networks:
+      - mynet
 
 volumes:
   postgresqldb-data:
