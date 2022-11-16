@@ -67,7 +67,7 @@ public class MessageService {
             return getLastSentMessage(incomingUserMessage.getFromSource()).map(new Function<UserMessage, Mono<UserMessageDto>>() {
                 @Override
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
-                    if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVE)) {
+                    if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
                         LeaveRequestService leaveRequestService = LeaveRequestService.builder()
                                 .userMessageRepository(userMessageRepository)
                                 .flowRepository(flowRepository)
@@ -139,7 +139,7 @@ public class MessageService {
                     .userRepository(userRepository)
                     .build();
             return birthdayService.processBirthdayRequest( userMessageDto,"/birthday", 0);
-        } else if (commandType.equals(CommandType.LEAVE)) {
+        } else if (commandType.equals(CommandType.LEAVEREQUEST)) {
             LeaveRequestService leaveRequestService = LeaveRequestService.builder()
                     .userMessageRepository(userMessageRepository)
                     .flowRepository(flowRepository)

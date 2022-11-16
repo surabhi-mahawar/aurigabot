@@ -23,7 +23,7 @@
 ### Commands ###
 * /dashboard- personalized message to show useful information.
 * /birthday- show list of people having birthday on that day.
-* /leave- bot asks certain question for sending leave application.
+* /leaverequest- bot asks certain question for sending leave application.
 * /todo- coming soon.
 
 <img src="src/main/resources/static/demo.png">

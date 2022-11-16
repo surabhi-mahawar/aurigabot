@@ -1,12 +1,9 @@
 package com.dynamos.aurigabot.enums;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
 public enum CommandType {
 	REGTELEGRAMUSER("/regTelegramUser"),
 	BIRTHDAY("/birthday"),
-	LEAVE("/leave"),
+	LEAVEREQUEST("/leaverequest"),
 	DASHBOARD("/dashboard"),
 	TODO("/todo");
 

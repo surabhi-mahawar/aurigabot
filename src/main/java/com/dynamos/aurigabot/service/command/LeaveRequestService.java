@@ -38,7 +38,7 @@ public class LeaveRequestService {
      * @return
      */
     public Mono<UserMessageDto> processApplyLeaveRequest(User user, UserMessage incomingUserMessage, UserMessageDto outUserMessageDto, UserMessage lastSentMessage) {
-        if(lastSentMessage != null && lastSentMessage.getFlow().getCommandType().equals(CommandType.LEAVE)) {
+        if(lastSentMessage != null && lastSentMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
             Flow lastFlow = lastSentMessage.getFlow();
             Integer lastIndex = lastSentMessage.getIndex();
             Integer currentIndex = lastSentMessage.getIndex()+1;
@@ -184,7 +184,7 @@ public class LeaveRequestService {
      * @return
      */
     private Flux<Flow> getFlowByIndex(Integer index) {
-        return flowRepository.findByIndexAndCommandType(index, CommandType.LEAVE.getDisplayValue());
+        return flowRepository.findByIndexAndCommandType(index, CommandType.LEAVEREQUEST.getDisplayValue());
     }
 
     /**
