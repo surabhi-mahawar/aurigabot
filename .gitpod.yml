@@ -1,0 +1,7 @@
+tasks:
+  - name: Auriga Bot
+    init: bash ./install.sh
+
+ports:
+  - port: 8080 # Auriga Bot
+    onOpen: ignore

@@ -30,8 +30,14 @@ else
     sudo chmod +x /usr/local/bin/docker-compose
 fi
 
+echo "Start postgresqldb"
 sudo docker-compose up -d postgresqldb
+
+echo "Maven clean repository"
 mvn clean install -DskipTests
-#mvn spring-boot:run
+
+echo "Docker build of repository"
 docker build -t surabhidocker28/aurigabot .
+
+echo "Start aurigabot service"
 docker run --env-file .env --network=aurigabot_mynet -d -p8080:8080 surabhidocker28/aurigabot

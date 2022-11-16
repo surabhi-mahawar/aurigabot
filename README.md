@@ -28,6 +28,9 @@
 
 <img src="src/main/resources/static/demo.png">
 
+## Run on Gitpod ##
+[![Open v1 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/surabhi-mahawar/aurigabot/install.sh)
+
 ### Future Scope ###
 * Whatsapp Adapters
 * Additional functionalities using buttons to different commands
