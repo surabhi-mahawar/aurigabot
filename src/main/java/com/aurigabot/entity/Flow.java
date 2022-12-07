@@ -21,7 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "flow")
-public class Flow implements Serializable {
+public class Flow {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -31,18 +31,11 @@ public class Flow implements Serializable {
 
     @Type(type = "jsonb")
     private FlowPayloadDto payload;
-//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
-//    private UserMessage message;
 
     private String question;
     private Integer index;
 
     @Type(type = "jsonb")
-    @JsonSerialize
-    @JsonDeserialize
     private Validation validation;
-//    private Date createdAt;
-//    private Date updatedAt;
-
 }
 

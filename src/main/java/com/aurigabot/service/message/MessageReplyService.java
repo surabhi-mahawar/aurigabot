@@ -15,12 +15,8 @@ import com.aurigabot.service.command.DashboardService;
 import com.aurigabot.service.command.LeaveRequestService;
 import com.aurigabot.service.command.TelegramService;
 import com.aurigabot.utils.BotUtil;
-import com.aurigabot.utils.UserMessageUtil;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +25,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.util.*;
@@ -37,7 +32,7 @@ import java.util.function.Function;
 
 @Slf4j
 @Service
-public class MessageService {
+public class MessageReplyService {
     @Autowired
     private UserRepository userRepository;
 

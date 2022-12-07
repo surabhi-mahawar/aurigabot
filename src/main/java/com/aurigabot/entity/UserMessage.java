@@ -31,7 +31,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_message")
-public class UserMessage implements Serializable {
+public class UserMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -56,13 +56,10 @@ public class UserMessage implements Serializable {
     private String message;
 
     @Type(type = "jsonb")
-//    @JsonSerialize(using = JsonSerializer.class)
-//    @JsonDeserialize(using = JsonDeserializer.class)
     private MessagePayloadDto payload;
 
     @Enumerated(EnumType.STRING)
     private UserMessageStatus status;
-
 
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)

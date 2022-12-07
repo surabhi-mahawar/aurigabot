@@ -17,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserMessageDto implements Serializable {
+public class UserMessageDto {
     private String fromSource;
     private String toSource;
     private UUID fromUserId;
@@ -29,11 +29,7 @@ public class UserMessageDto implements Serializable {
     private int index;
     private String message;
 
-//    private Boolean msgFound;
-
     @Type(type = "jsonb")
-    @JsonSerialize
-    @JsonDeserialize
     private MessagePayloadDto payload;
 
     private UserMessageStatus status;

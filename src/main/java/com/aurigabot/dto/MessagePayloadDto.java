@@ -12,10 +12,9 @@ import java.util.ArrayList;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessagePayloadDto implements Serializable {
+public class MessagePayloadDto {
     private String message;
     private MessagePayloadType msgType;
     private String mediaUrl;
     private ArrayList<MessagePayloadChoiceDto> choices;
-
 }
