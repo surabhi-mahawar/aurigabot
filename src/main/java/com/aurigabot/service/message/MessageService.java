@@ -73,8 +73,7 @@ public class MessageService {
         log.info("Received User Message: " + message);
         ObjectMapper mapper = new ObjectMapper();
         try {
-            Object obj = mapper.readValue(message, UserMessage.class);
-            UserMessage userMessage = (UserMessage) obj;
+            UserMessage userMessage = mapper.readValue(message, UserMessage.class);
             processMessage(userMessage).subscribe(booleanObjectPair -> {
                 try {
                     if(booleanObjectPair.getLeft() == true) {

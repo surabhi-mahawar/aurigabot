@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class MessagePayloadDto implements Serializable {
     private String message;
     private MessagePayloadType msgType;
-    private String media_url;
+    private String mediaUrl;
     private ArrayList<MessagePayloadChoiceDto> choices;
 
 }

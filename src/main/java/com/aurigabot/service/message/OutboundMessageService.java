@@ -38,8 +38,7 @@ public class OutboundMessageService {
         log.info("Received Outbound Message: " + message);
         ObjectMapper mapper = new ObjectMapper();
         try {
-            Object obj = mapper.readValue(message, Message.class);
-            UserMessageDto userMessageDto = (UserMessageDto) obj;
+            UserMessageDto userMessageDto = mapper.readValue(message, UserMessageDto.class);
             AbstractAdapter adapter = adapterFactoryProvider.getAdapter(userMessageDto.getChannel());
             processOutboundMessage(adapter, userMessageDto).subscribe(booleanObjectPair -> {
                 if(booleanObjectPair.getLeft() == true) {

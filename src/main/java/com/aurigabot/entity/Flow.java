@@ -1,5 +1,6 @@
 package com.aurigabot.entity;
 
+import com.aurigabot.dto.FlowPayloadDto;
 import com.aurigabot.dto.Validation;
 import com.aurigabot.enums.CommandType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -9,6 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Setter
@@ -19,7 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "flow")
-public class Flow {
+public class Flow implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -28,9 +30,7 @@ public class Flow {
     private CommandType commandType;
 
     @Type(type = "jsonb")
-    @JsonSerialize
-    @JsonDeserialize
-    private Json payload;
+    private FlowPayloadDto payload;
 //    @OneToOne(fetch = FetchType.LAZY, mappedBy = "flow")
 //    private UserMessage message;
 

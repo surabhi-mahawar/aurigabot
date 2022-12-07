@@ -1,5 +1,6 @@
 package com.aurigabot.entity.converters;
 
+import com.aurigabot.dto.FlowPayloadDto;
 import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.entity.Flow;
@@ -24,26 +25,33 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
 
     @Override
     public UserMessage convert(Row source) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
         Flow flow;
         if(source.get("flow", UUID.class) != null) {
+            FlowPayloadDto flowPayloadDto = null;
+            try {
+                flowPayloadDto = mapper.readValue(source.get("fl_payload", String.class), FlowPayloadDto.class);
+            } catch(JsonProcessingException ex) {
+
+            }
             flow = Flow.builder().id(source.get("fl_id", UUID.class))
                     .commandType(CommandType.getEnumByValue(source.get("fl_command_type", String.class)))
                     .question(source.get("fl_question", String.class))
                     .index(source.get("fl_index", Integer.class))
-                    .payload(source.get("fl_payload", Json.class))
+//                    .payload(source.get("fl_payload", FlowPayloadDto.class))
+                    .payload(flowPayloadDto)
                     .build();
         } else {
             flow = null;
         }
 
-//        ObjectMapper mapper = new ObjectMapper();
-//        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
-//        try {
-//            Json json = source.get("payload", Json.class);
-//            MessagePayloadDto messagePayloadDto = mapper.readValue(json, MessagePayloadDto.class);
-//        } catch(JsonProcessingException ex) {
-//
-//        }
+        MessagePayloadDto messagePayloadDto = null;
+        try {
+            messagePayloadDto = mapper.readValue(source.get("payload", String.class), MessagePayloadDto.class);
+        } catch(JsonProcessingException ex) {
+
+        }
 
         return UserMessage.builder()
                 .id(source.get("id", UUID.class))
@@ -57,6 +65,7 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
                 .provider(ChannelProvider.valueOf(source.get("provider", String.class)))
                 .message(source.get("message", String.class))
 //                .payload(source.get("payload", MessagePayloadDto.class))
+                .payload(messagePayloadDto)
                 .status(UserMessageStatus.valueOf(source.get("status", String.class)))
                 .receivedAt(source.get("received_at", LocalDateTime.class))
                 .sentAt(source.get("sent_at", LocalDateTime.class))
