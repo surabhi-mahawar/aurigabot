@@ -61,16 +61,6 @@ class TelegramBot extends TelegramLongPollingBot {
         // Checking if the update has message and it has text
         if (update.hasMessage() && update.getMessage().hasText()) {
             System.out.println("Received Telegram Message: "+update.getMessage());
-
-//            AbstractAdapter adapter = new TelegramAdapter(getOutboundBaseUrl());
-//            InboundMessageService inboundMessageService = InboundMessageService.builder()
-//                    .adapter(adapter)
-//                    .userRepository(userRepository)
-//                    .flowRepository(flowRepository)
-//                    .userMessageRepository(userMessageRepository)
-//                    .leaveRequestRepository(leaveRequestRepository)
-//                    .build();
-
             try {
                 ObjectMapper Obj = new ObjectMapper();
                 String jsonStr = Obj.writeValueAsString(update.getMessage());
@@ -78,9 +68,6 @@ class TelegramBot extends TelegramLongPollingBot {
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
-//            inboundMessageService
-//                    .processInboundMessage(response, update.getMessage())
-//                    .subscribe();
         }
     }
 }

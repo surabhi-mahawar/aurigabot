@@ -6,6 +6,8 @@ import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.enums.MessagePayloadType;
 import lombok.Builder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.text.ParseException;
@@ -14,8 +16,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.function.Function;
 
-@Builder
+@Service
 public class BirthdayService {
+    @Autowired
     private UserRepository userRepository;
 
     /**

@@ -28,29 +28,29 @@ public class OutboundService {
     @Value("${telegram.bot.token}")
     private String botToken;
 
-    @KafkaListener(topics = "${kafka.topic.telegram.outbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
-    public void listenOutboundTopic(String message) {
-        System.out.println("Received Message: " + message);
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Object obj = mapper.readValue(message, Message.class);
-            UserMessageDto outUserMessageDto = (UserMessageDto) obj;
-
-            HttpApiResponse response = HttpApiResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .path("/inbound/telegram")
-                    .build();
-
-            OutboundMessageService outboundMessageService = OutboundMessageService.builder()
-                    .adapter(getAdapterByChannel())
-                    .userMessageRepository(userMessageRepository)
-                    .build();
-
-            outboundMessageService.processOutboundMessage(response, outUserMessageDto).subscribe();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-    }
+//    @KafkaListener(topics = "${kafka.topic.telegram.outbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
+//    public void listenOutboundTopic(String message) {
+//        System.out.println("Received Message: " + message);
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            Object obj = mapper.readValue(message, Message.class);
+//            UserMessageDto outUserMessageDto = (UserMessageDto) obj;
+//
+//            HttpApiResponse response = HttpApiResponse.builder()
+//                    .status(HttpStatus.OK.value())
+//                    .path("/inbound/telegram")
+//                    .build();
+//
+////            OutboundMessageService outboundMessageService = OutboundMessageService.builder()
+////                    .adapter(getAdapterByChannel())
+////                    .userMessageRepository(userMessageRepository)
+////                    .build();
+////
+////            outboundMessageService.processOutboundMessage(response, outUserMessageDto).subscribe();
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private AbstractAdapter getAdapterByChannel() {
         String outboundUrl = telegramApiUrl+"bot"+botToken;

@@ -39,30 +39,30 @@ public class InboundService {
     @Value("${telegram.bot.token}")
     private String botToken;
 
-    @KafkaListener(topics = "${kafka.topic.telegram.inbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
-    public void listenTelegramInboundTopic(String message) {
-        String outboundUrl = telegramApiUrl+"bot"+botToken;
-        System.out.println("Received Message: " + message);
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Object obj = mapper.readValue(message, Message.class);
-            AbstractAdapter adapter = new TelegramAdapter(outboundUrl);
-            InboundMessageService inboundMessageService = InboundMessageService.builder()
-                    .adapter(adapter)
-                    .userRepository(userRepository)
-                    .flowRepository(flowRepository)
-                    .userMessageRepository(userMessageRepository)
-                    .leaveRequestRepository(leaveRequestRepository)
-                    .build();
-
-            HttpApiResponse response = HttpApiResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .path("/inbound/telegram")
-                    .build();
-
-            inboundMessageService.processInboundMessage(response, obj).subscribe();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-    }
+//    @KafkaListener(topics = "${kafka.topic.telegram.inbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
+//    public void listenTelegramInboundTopic(String message) {
+//        String outboundUrl = telegramApiUrl+"bot"+botToken;
+//        System.out.println("Received Message: " + message);
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            Object obj = mapper.readValue(message, Message.class);
+//            AbstractAdapter adapter = new TelegramAdapter(outboundUrl);
+////            InboundMessageService inboundMessageService = InboundMessageService.builder()
+////                    .adapter(adapter)
+////                    .userRepository(userRepository)
+////                    .flowRepository(flowRepository)
+////                    .userMessageRepository(userMessageRepository)
+////                    .leaveRequestRepository(leaveRequestRepository)
+////                    .build();
+//
+//            HttpApiResponse response = HttpApiResponse.builder()
+//                    .status(HttpStatus.OK.value())
+//                    .path("/inbound/telegram")
+//                    .build();
+//
+////            inboundMessageService.processInboundMessage(response, obj).subscribe();
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

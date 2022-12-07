@@ -4,49 +4,83 @@ import com.aurigabot.adapters.AbstractAdapter;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.enums.UserMessageStatus;
+import com.aurigabot.providers.AdapterFactoryProvider;
 import com.aurigabot.repository.UserMessageRepository;
 import com.aurigabot.response.HttpApiResponse;
 import com.aurigabot.utils.UserMessageUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Mono;
 
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.function.Function;
 
-@Builder
+@Slf4j
+@Service
 public class OutboundMessageService {
-    private AbstractAdapter adapter;
+    @Autowired
     private UserMessageRepository userMessageRepository;
 
+    @Autowired
+    private AdapterFactoryProvider adapterFactoryProvider;
+
+    @KafkaListener(topics = "${kafka.topic.outbound.message}", groupId = "${kafka.outbound.consumer.group.id}")
+    public void listenOutboundMessageTopic(String message) {
+        log.info("Received Outbound Message: " + message);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Object obj = mapper.readValue(message, Message.class);
+            UserMessageDto userMessageDto = (UserMessageDto) obj;
+            AbstractAdapter adapter = adapterFactoryProvider.getAdapter(userMessageDto.getChannel());
+            processOutboundMessage(adapter, userMessageDto).subscribe(booleanObjectPair -> {
+                if(booleanObjectPair.getLeft() == true) {
+                    log.info(booleanObjectPair.getRight().toString());
+                } else {
+                    log.error(booleanObjectPair.getRight().toString());
+                }
+            });
+        } catch (JsonProcessingException e) {
+            log.error("JsonProcessingException in listenOutboundMessageTopic: "+e.getMessage());
+        } catch (HttpServerErrorException.InternalServerError e) {
+            log.error("InternalServerError in listenOutboundMessageTopic: "+e.getMessage());
+        }
+    }
 
     /**
      * Process outbound message - convert to channel message format and send message to user
-     * @param response
      * @param userMessageDto
      * @return
      */
-    public Mono<HttpApiResponse> processOutboundMessage(HttpApiResponse response, UserMessageDto userMessageDto) {
-        return adapter.sendOutboundMessage(userMessageDto).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
+    public Mono<Pair<Boolean, Object>> processOutboundMessage(AbstractAdapter adapter, UserMessageDto userMessageDto) {
+        return adapter.sendOutboundMessage(userMessageDto).map(new Function<UserMessageDto, Mono<Pair<Boolean, Object>>>() {
             @Override
-            public Mono<HttpApiResponse> apply(UserMessageDto userMessageDto) {
+            public Mono<Pair<Boolean, Object>> apply(UserMessageDto userMessageDto) {
                 UserMessage userMessageDao = UserMessageUtil.convertDtotoDao(userMessageDto);
                 userMessageDao.setSentAt(LocalDateTime.now());
                 userMessageDao.setCreatedAt(LocalDateTime.now());
-                return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, HttpApiResponse>() {
+                return userMessageRepository.save(userMessageDao).map(new Function<UserMessage, Pair<Boolean, Object>>() {
                     @Override
-                    public HttpApiResponse apply(UserMessage userMessage) {
+                    public Pair<Boolean, Object> apply(UserMessage userMessage) {
                         if(userMessage.getStatus().equals(UserMessageStatus.SENT)) {
-                            response.setMessage("Reply message sent to user.");
+                            return Pair.of(true, "Reply message sent to user.");
                         } else {
-                            response.setMessage("Reply message not sent to user.");
+                            return Pair.of(false, "Reply message not sent to user.");
                         }
-                        return response;
                     }
                 });
             }
-        }).flatMap(new Function<Mono<HttpApiResponse>, Mono<? extends HttpApiResponse>>() {
+        }).flatMap(new Function<Mono<Pair<Boolean, Object>>, Mono<? extends Pair<Boolean, Object>>>() {
             @Override
-            public Mono<? extends HttpApiResponse> apply(Mono<HttpApiResponse> m1) {
+            public Mono<? extends Pair<Boolean, Object>> apply(Mono<Pair<Boolean, Object>> m1) {
                 return m1;
             }
         });

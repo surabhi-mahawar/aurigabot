@@ -1,6 +1,9 @@
 package com.aurigabot.entity.converters;
 
 import com.aurigabot.entity.UserMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import io.r2dbc.postgresql.codec.Json;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
@@ -41,13 +44,22 @@ public class UserMessageWriteConverter implements Converter<UserMessage, Outboun
         row.put("channel", Parameter.fromOrEmpty(userMessage.getChannel(), String.class));
         row.put("provider", Parameter.fromOrEmpty(userMessage.getProvider(), String.class));
         row.put("message", Parameter.fromOrEmpty(userMessage.getMessage(), String.class));
-        row.put("payload", Parameter.fromOrEmpty(userMessage.getPayload(), Json.class));
+//        row.put("payload", Parameter.fromOrEmpty(userMessage.getPayload(), Json.class));
         row.put("status", Parameter.fromOrEmpty(userMessage.getStatus(), String.class));
         row.put("received_at", Parameter.fromOrEmpty(userMessage.getReceivedAt(), LocalDateTime.class));
         row.put("sent_at", Parameter.fromOrEmpty(userMessage.getSentAt(), LocalDateTime.class));
         row.put("delivered_at", Parameter.fromOrEmpty(userMessage.getDeliveredAt(), LocalDateTime.class));
         row.put("read_at", Parameter.fromOrEmpty(userMessage.getReadAt(), LocalDateTime.class));
         row.put("created_at", Parameter.from(createdAt));
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+        try {
+            String json = ow.writeValueAsString(userMessage.getPayload());
+            row.put("payload", Parameter.fromOrEmpty(Json.of(json), Json.class));
+        } catch(JsonProcessingException ex) {
+
+        }
 
         return row;
     }

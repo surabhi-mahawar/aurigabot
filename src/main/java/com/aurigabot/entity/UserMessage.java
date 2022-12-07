@@ -1,10 +1,16 @@
 package com.aurigabot.entity;
 
+import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.enums.ChannelProvider;
 import com.aurigabot.enums.MessageChannel;
 import com.aurigabot.enums.UserMessageStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import io.r2dbc.postgresql.codec.Json;
 import lombok.*;
 import org.hibernate.annotations.Type;
@@ -13,6 +19,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,7 +31,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_message")
-public class UserMessage {
+public class UserMessage implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -49,18 +56,33 @@ public class UserMessage {
     private String message;
 
     @Type(type = "jsonb")
-    @JsonSerialize
-    @JsonDeserialize
-    private Json payload;
+//    @JsonSerialize(using = JsonSerializer.class)
+//    @JsonDeserialize(using = JsonDeserializer.class)
+    private MessagePayloadDto payload;
 
     @Enumerated(EnumType.STRING)
     private UserMessageStatus status;
 
-    @CreatedDate
-    protected LocalDateTime createdAt;
 
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdAt;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime sentAt;
+
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime receivedAt;
+
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime deliveredAt;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime readAt;
 }

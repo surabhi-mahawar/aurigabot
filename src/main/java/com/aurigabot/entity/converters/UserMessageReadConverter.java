@@ -1,15 +1,20 @@
 package com.aurigabot.entity.converters;
 
+import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.entity.Flow;
 import com.aurigabot.enums.ChannelProvider;
 import com.aurigabot.enums.CommandType;
 import com.aurigabot.enums.MessageChannel;
 import com.aurigabot.enums.UserMessageStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Row;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
+import org.springframework.r2dbc.core.Parameter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -31,6 +36,15 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
             flow = null;
         }
 
+//        ObjectMapper mapper = new ObjectMapper();
+//        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+//        try {
+//            Json json = source.get("payload", Json.class);
+//            MessagePayloadDto messagePayloadDto = mapper.readValue(json, MessagePayloadDto.class);
+//        } catch(JsonProcessingException ex) {
+//
+//        }
+
         return UserMessage.builder()
                 .id(source.get("id", UUID.class))
                 .flow(flow)
@@ -42,7 +56,7 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
                 .channel(MessageChannel.valueOf(source.get("channel", String.class)))
                 .provider(ChannelProvider.valueOf(source.get("provider", String.class)))
                 .message(source.get("message", String.class))
-                .payload(source.get("payload", Json.class))
+//                .payload(source.get("payload", MessagePayloadDto.class))
                 .status(UserMessageStatus.valueOf(source.get("status", String.class)))
                 .receivedAt(source.get("received_at", LocalDateTime.class))
                 .sentAt(source.get("sent_at", LocalDateTime.class))

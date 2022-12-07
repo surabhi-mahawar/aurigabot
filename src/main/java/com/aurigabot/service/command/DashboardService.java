@@ -6,15 +6,23 @@ import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserRepository;
 import com.aurigabot.dto.UserMessageDto;
 import lombok.Builder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.function.Function;
 
-@Builder
+@Service
 public class DashboardService {
+    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
+
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BirthdayService birthdayService;
 
     /**
      * Process /dashboard command - send list of applied leaves, birthdays etc
@@ -43,9 +51,6 @@ public class DashboardService {
                     }
                 }
                 userMessageDto.setMessage(message);
-                BirthdayService birthdayService = BirthdayService.builder()
-                        .userRepository(userRepository)
-                        .build();
                 return birthdayService.processBirthdayRequest(userMessageDto,"/birthday",0);
             }
         }).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {

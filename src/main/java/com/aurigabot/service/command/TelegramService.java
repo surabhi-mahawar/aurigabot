@@ -13,15 +13,22 @@ import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.enums.MessagePayloadType;
 import lombok.Builder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.function.Function;
 
-@Builder
+@Service
 public class TelegramService {
+    @Autowired
     private UserMessageRepository userMessageRepository;
+
+    @Autowired
     private FlowRepository flowRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     /**

@@ -16,7 +16,9 @@ import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.enums.*;
 import lombok.Builder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,10 +29,15 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-@Builder
+@Service
 public class LeaveRequestService {
+    @Autowired
     private UserMessageRepository userMessageRepository;
+
+    @Autowired
     private FlowRepository flowRepository;
+
+    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
 
     /**

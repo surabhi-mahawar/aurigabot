@@ -30,17 +30,18 @@ public class UserMessageUtil {
                 .status(userMessageDto.getStatus())
                 .flow(userMessageDto.getFlow())
                 .index(userMessageDto.getIndex())
+                .payload(userMessageDto.getPayload())
                 .build();
 
 
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
-        try {
-            String json = ow.writeValueAsString(userMessageDto.getPayload());
-            userMessage.setPayload(Json.of(json));
-        } catch(JsonProcessingException ex) {
-
-        }
+//        ObjectMapper mapper = new ObjectMapper();
+//        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+//        try {
+//            String json = ow.writeValueAsString(userMessageDto.getPayload());
+//            userMessage.setPayload(Json.of(json));
+//        } catch(JsonProcessingException ex) {
+//
+//        }
 
         return userMessage;
     }

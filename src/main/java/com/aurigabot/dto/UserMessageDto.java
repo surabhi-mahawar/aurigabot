@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserMessageDto {
+public class UserMessageDto implements Serializable {
     private String fromSource;
     private String toSource;
     private UUID fromUserId;

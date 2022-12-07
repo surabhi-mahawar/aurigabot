@@ -41,19 +41,21 @@ public class WebPortalController {
     @PostMapping(value = "/webMessage", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Mono<HttpApiResponse> webMessage(@RequestBody InboundMessage message) {
         AbstractAdapter adapter = new WebPortalAdapter(outboundUrl);
-        InboundMessageService inboundMessageService = InboundMessageService.builder()
-                .adapter(adapter)
-                .userRepository(userRepository)
-                .flowRepository(flowRepository)
-                .userMessageRepository(userMessageRepository)
-                .leaveRequestRepository(leaveRequestRepository)
-                .build();
+//        InboundMessageService inboundMessageService = InboundMessageService.builder()
+//                .adapter(adapter)
+//                .userRepository(userRepository)
+//                .flowRepository(flowRepository)
+//                .userMessageRepository(userMessageRepository)
+//                .leaveRequestRepository(leaveRequestRepository)
+//                .build();
 
         HttpApiResponse response = HttpApiResponse.builder()
                 .status(HttpStatus.OK.value())
                 .path("/inbound/webMessage")
                 .build();
 
-        return inboundMessageService.processInboundMessage(response, message);
+        return Mono.just(response);
+
+//        return inboundMessageService.processInboundMessage(response, message);
     }
 }

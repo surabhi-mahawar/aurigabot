@@ -4,41 +4,130 @@ import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.entity.User;
 import com.aurigabot.entity.UserMessage;
-import com.aurigabot.enums.CommandType;
-import com.aurigabot.enums.MessageChannel;
-import com.aurigabot.enums.MessagePayloadType;
-import com.aurigabot.enums.UserMessageStatus;
+import com.aurigabot.enums.*;
 import com.aurigabot.repository.FlowRepository;
 import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserMessageRepository;
 import com.aurigabot.repository.UserRepository;
+import com.aurigabot.service.KafkaProducerService;
 import com.aurigabot.service.command.BirthdayService;
 import com.aurigabot.service.command.DashboardService;
 import com.aurigabot.service.command.LeaveRequestService;
 import com.aurigabot.service.command.TelegramService;
 import com.aurigabot.utils.BotUtil;
 import com.aurigabot.utils.UserMessageUtil;
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
 
-@Builder
+@Slf4j
+@Service
 public class MessageService {
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
     private FlowRepository flowRepository;
+
+    @Autowired
     private UserMessageRepository userMessageRepository;
-    private UserMessageUtil userMessageUtil;
+
+    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
+
+    @Autowired
+    private TelegramService telegramService;
+
+    @Autowired
+    private BirthdayService birthdayService;
+
+    @Autowired
+    private DashboardService dashboardService;
+
+    @Autowired
+    private LeaveRequestService leaveRequestService;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+
+    @Value(value = "${kafka.topic.outbound.message}")
+    private String outboundTopic;
+
+    @KafkaListener(topics = "${kafka.topic.user.message}", groupId = "${kafka.user.message.consumer.group.id}")
+    public void listenUserMessageTopic(String message) {
+        log.info("Received User Message: " + message);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Object obj = mapper.readValue(message, UserMessage.class);
+            UserMessage userMessage = (UserMessage) obj;
+            processMessage(userMessage).subscribe(booleanObjectPair -> {
+                try {
+                    if(booleanObjectPair.getLeft() == true) {
+                        UserMessageDto dto = (UserMessageDto) booleanObjectPair.getRight();
+                        String jsonStr = mapper.writeValueAsString(dto);
+                        kafkaProducerService.sendMessage(jsonStr, outboundTopic);
+                    } else {
+                        log.error(booleanObjectPair.getRight().toString());
+                    }
+
+                } catch (JsonProcessingException e) {
+                    log.error("JsonProcessingException in listenUserMessageTopic: "+e.getMessage());
+                }
+            });
+        } catch (ParseException e) {
+            log.error("ParseException in listenUserMessageTopic: "+e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("JsonProcessingException in listenUserMessageTopic: "+e.getMessage());
+        } catch (HttpServerErrorException.InternalServerError e) {
+            log.error("InternalServerError in listenUserMessageTopic: "+e.getMessage());
+        }
+    }
 
     /**
      * Process incoming message, return outgoing message
-     * @param user
      * @param incomingUserMessage
      * @return
      */
-    public Mono<UserMessageDto> processMessage(User user, UserMessage incomingUserMessage) throws ParseException {
+    public Mono<Pair<Boolean, Object>> processMessage(UserMessage incomingUserMessage) throws ParseException {
+        return findUserById(incomingUserMessage.getFromUserId()).map(new Function<List<User>, Mono<Pair<Boolean, Object>>>() {
+            @Override
+            public Mono<Pair<Boolean, Object>> apply(List<User> users) {
+                User user=null;
+                if(users.size() > 0 && users.get(0) != null) {
+                    user = users.get(0);
+                }
+
+                return processMessageInternal(user, incomingUserMessage).map(new Function<UserMessageDto, Pair<Boolean, Object>>() {
+                    @Override
+                    public Pair<Boolean, Object> apply(UserMessageDto userMessageDto) {
+                        return Pair.of(true, userMessageDto);
+                    }
+                });
+            }
+        }).flatMap(new Function<Mono<Pair<Boolean, Object>>, Mono<? extends Pair<Boolean, Object>>>() {
+            @Override
+            public Mono<? extends Pair<Boolean, Object>> apply(Mono<Pair<Boolean, Object>> pairMono) {
+                return pairMono;
+            }
+        });
+    }
+
+    private Mono<UserMessageDto> processMessageInternal(User user, UserMessage incomingUserMessage) {
         UserMessageDto outUserMessageDto = UserMessageDto.builder()
                 .fromUserId(incomingUserMessage.getToUserId())
                 .toUserId(incomingUserMessage.getFromUserId())
@@ -56,11 +145,6 @@ public class MessageService {
          */
 
         if(user == null && incomingUserMessage.getChannel()== MessageChannel.TELEGRAM) {
-            TelegramService telegramService = TelegramService.builder()
-                    .userMessageRepository(userMessageRepository)
-                    .flowRepository(flowRepository)
-                    .userRepository(userRepository)
-                    .build();
             return telegramService.processUnregisteredTelegramUser(incomingUserMessage, outUserMessageDto);
         } else if (BotUtil.isBotStartingMessage(incomingUserMessage.getMessage())) {
             return processBotStartingMessage(user, outUserMessageDto);
@@ -71,11 +155,6 @@ public class MessageService {
                 @Override
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
                     if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
-                        LeaveRequestService leaveRequestService = LeaveRequestService.builder()
-                                .userMessageRepository(userMessageRepository)
-                                .flowRepository(flowRepository)
-                                .leaveRequestRepository(leaveRequestRepository)
-                                .build();
                         return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
                     } else {
                         return processInvalidRequest(outUserMessageDto);
@@ -87,6 +166,20 @@ public class MessageService {
                     return userMessageDtoMono;
                 }
             });
+        }
+    }
+
+    /**
+     * Find user by id
+     * @param userId
+     * @return
+     */
+    private Mono<List<User>> findUserById(@Nullable UUID userId) {
+        if(userId != null) {
+            return userRepository.findById(userId).flux().collectList();
+        } else {
+            List<User> list = new ArrayList<>();
+            return Mono.just(list);
         }
     }
 
@@ -138,22 +231,10 @@ public class MessageService {
      */
     public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType,UserMessage incomingMessageDto) {
         if(commandType.equals(CommandType.BIRTHDAY)) {
-            BirthdayService birthdayService = BirthdayService.builder()
-                    .userRepository(userRepository)
-                    .build();
             return birthdayService.processBirthdayRequest( userMessageDto,"/birthday", 0);
         } else if (commandType.equals(CommandType.LEAVEREQUEST)) {
-            LeaveRequestService leaveRequestService = LeaveRequestService.builder()
-                    .userMessageRepository(userMessageRepository)
-                    .flowRepository(flowRepository)
-                    .leaveRequestRepository(leaveRequestRepository)
-                    .build();
             return leaveRequestService.processApplyLeaveRequest(user, incomingMessageDto, userMessageDto, null);
         } else if (commandType.equals(CommandType.DASHBOARD)) {
-            DashboardService dashboardService = DashboardService.builder()
-                    .userRepository(userRepository)
-                    .leaveRequestRepository(leaveRequestRepository)
-                    .build();
             return dashboardService.processDashboardRequest(userMessageDto,"/dashboard",0,user);
         } else if (commandType.equals(CommandType.TODO)) {
             return processToDoRequest(userMessageDto);

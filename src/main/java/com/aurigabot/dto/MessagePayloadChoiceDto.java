@@ -1,13 +1,15 @@
 package com.aurigabot.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Getter
 @Setter
 @Builder
-public class MessagePayloadChoiceDto {
+@NoArgsConstructor
+@AllArgsConstructor
+public class MessagePayloadChoiceDto implements Serializable {
     private String key;
     private String text;
 }
