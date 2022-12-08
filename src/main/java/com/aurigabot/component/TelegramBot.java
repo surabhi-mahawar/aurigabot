@@ -11,6 +11,7 @@ import com.aurigabot.service.KafkaProducerService;
 import com.aurigabot.service.message.InboundMessageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
+@Slf4j
 class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private KafkaProducerService kafkaProducerService;
@@ -26,30 +28,18 @@ class TelegramBot extends TelegramLongPollingBot {
     @Value(value = "${kafka.topic.telegram.inbound.message}")
     private String topic;
 
-    String botToken;
-    String botUsername;
-    String outboundBaseUrl;
+    @Value("${telegram.bot.username}")
+    private String telegramBotUsername;
 
-    TelegramBot(@Value("${telegram.bot.token}") String botToken,
-                @Value("${telegram.bot.username}") String botUsername,
-                @Value("${telegram.bot.apiUrl}") String telegramApiUrl) {
-        this.botToken = botToken;
-        this.botUsername = botUsername;
-        this.outboundBaseUrl = telegramApiUrl+"bot"+botToken;
-    }
+    @Value("${telegram.bot.token}")
+    private String telegramBotToken;
 
-    @Override
     public String getBotToken() {
-        return botToken;
+        return telegramBotToken;
     }
 
-    @Override
     public String getBotUsername() {
-        return botUsername;
-    }
-
-    public String getOutboundBaseUrl() {
-        return outboundBaseUrl;
+        return telegramBotUsername;
     }
 
     /**
@@ -60,7 +50,7 @@ class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         // Checking if the update has message and it has text
         if (update.hasMessage() && update.getMessage().hasText()) {
-            System.out.println("Received Telegram Message: "+update.getMessage());
+            log.info("Received Telegram Message: "+update.getMessage());
             try {
                 ObjectMapper Obj = new ObjectMapper();
                 String jsonStr = Obj.writeValueAsString(update.getMessage());

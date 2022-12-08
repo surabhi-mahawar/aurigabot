@@ -16,11 +16,17 @@ public class KafkaTopicConfig {
     @Value(value = "${spring.kafka.bootstrap-servers}")
     private String bootstrapAddress;
 
-    @Value(value = "${kafka.topic.inbound.message}")
-    private String topic;
-
     @Value(value = "${kafka.topic.telegram.inbound.message}")
     private String telegramTopic;
+
+    @Value(value = "${kafka.topic.webPortal.inbound.message}")
+    private String webPortalTopic;
+
+    @Value(value = "${kafka.topic.user.message}")
+    private String messageTopic;
+
+    @Value(value = "${kafka.topic.outbound.message}")
+    private String outboundTopic;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -30,12 +36,22 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic inboundMessageTopic() {
-        return new NewTopic(topic, 1, (short) 1);
+    public NewTopic telegramInboundMessageTopic() {
+        return new NewTopic(telegramTopic, 1, (short) 1);
     }
 
     @Bean
-    public NewTopic telegramInboundMessageTopic() {
-        return new NewTopic(telegramTopic, 1, (short) 1);
+    public NewTopic webPortalInboundMessageTopic() {
+        return new NewTopic(webPortalTopic, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic userMessageTopic() {
+        return new NewTopic(messageTopic, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic outboundMessageTopic() {
+        return new NewTopic(outboundTopic, 1, (short) 1);
     }
 }

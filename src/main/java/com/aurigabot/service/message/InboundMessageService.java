@@ -56,15 +56,35 @@ public class InboundMessageService {
 	@Value(value = "${kafka.topic.user.message}")
 	private String messageTopic;
 
+	/**
+	 * Process inbound messages - for telegram inbound message kafka topic
+	 * @param message
+	 */
 	@KafkaListener(topics = "${kafka.topic.telegram.inbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
 	public void listenTelegramInboundTopic(String message) {
 		log.info("Received Inbound Message: " + message);
-		AbstractAdapter adapter = adapterFactoryProvider.getAdapter(MessageChannel.TELEGRAM);
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			Object obj = mapper.readValue(message, Message.class);
+			processInboundMessageTopic(MessageChannel.TELEGRAM, obj);
+		} catch (JsonProcessingException e) {
+			log.error("JsonProcessingException in listenTelegramInboundTopic: "+e.getMessage());
+		} catch (HttpServerErrorException.InternalServerError e) {
+			log.error("InternalServerError in listenTelegramInboundTopic: "+e.getMessage());
+		}
+	}
+
+	/**
+	 * Process inbound message, send next request to kafka topic
+	 * @param channel
+	 * @param message
+	 */
+	public void processInboundMessageTopic(MessageChannel channel, Object message) {
+		AbstractAdapter adapter = adapterFactoryProvider.getAdapter(channel);
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			if(adapter != null) {
-				Object obj = mapper.readValue(message, Message.class);
-				processInboundMessage(adapter, obj).subscribe(booleanObjectPair -> {
+				processInboundMessage(adapter, message).subscribe(booleanObjectPair -> {
 					try {
 						if(booleanObjectPair.getLeft() == true) {
 							UserMessage msg = (UserMessage) booleanObjectPair.getRight();
@@ -73,18 +93,15 @@ public class InboundMessageService {
 						} else {
 							log.error(booleanObjectPair.getRight().toString());
 						}
-
 					} catch (JsonProcessingException e) {
-						log.error("JsonProcessingException in listenTelegramInboundTopic outbound: "+e.getMessage());
+						log.error("JsonProcessingException in processInboundMessageTopic outbound: "+e.getMessage());
 					}
 				});
 			} else {
-				log.error("Adapter is null for telegram channel.");
+				log.error("Adapter is null for channel: "+channel.toString());
 			}
-		} catch (JsonProcessingException e) {
-			log.error("JsonProcessingException in listenTelegramInboundTopic: "+e.getMessage());
 		} catch (HttpServerErrorException.InternalServerError e) {
-			log.error("InternalServerError in listenTelegramInboundTopic: "+e.getMessage());
+			log.error("InternalServerError in processInboundMessageTopic: "+e.getMessage());
 		}
 	}
 
@@ -110,26 +127,6 @@ public class InboundMessageService {
 								@Override
 								public Pair<Boolean, Object> apply(UserMessage userMessage) {
 									return Pair.of(true, userMessage);
-//									MessageService messageService = MessageService.builder().userMessageRepository(userMessageRepository).userRepository(userRepository).flowRepository(flowRepository).leaveRequestRepository(leaveRequestRepository).build();
-//									try {
-//										User user=null;
-//										if(users.size() > 0 && users.get(0) != null) {
-//											user = users.get(0);
-//										}
-//										return messageService.processMessage(user, userMessage).map(new Function<UserMessageDto, Mono<HttpApiResponse>>() {
-//											@Override
-//											public Mono<HttpApiResponse> apply(UserMessageDto outUserMessageDto) {
-//												OutboundMessageService outboundMessageService = OutboundMessageService.builder()
-//														.adapter(adapter)
-//														.userMessageRepository(userMessageRepository)
-//														.build();
-//
-//												return outboundMessageService.processOutboundMessage(response, outUserMessageDto);
-//											}
-//										});
-//									} catch (ParseException e) {
-//										throw new RuntimeException(e);
-//									}
 								}
 							});
 						}
