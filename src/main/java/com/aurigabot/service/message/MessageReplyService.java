@@ -150,6 +150,8 @@ public class MessageReplyService {
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
                     if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
                         return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
+                    } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.BIRTHDAY)) {
+                        return birthdayService.processNewBirthdayRequest(incomingUserMessage, outUserMessageDto, lastMessage);
                     } else {
                         return processInvalidRequest(outUserMessageDto);
                     }
@@ -203,7 +205,7 @@ public class MessageReplyService {
      * @return
      */
     public Mono<UserMessageDto> processBotStartingMessage(User user, UserMessageDto userMessageDto) {
-        String msgText = "Hello "+user.getName()+", \n Please select a option from the list to proceed further.\n";
+        String msgText = "Hello "+user.getName()+", \nPlease select a option from the list to proceed further.\n";
         userMessageDto.setMessage(msgText);
 
         MessagePayloadDto payload = MessagePayloadDto.builder()
@@ -225,7 +227,7 @@ public class MessageReplyService {
      */
     public Mono<UserMessageDto> processCommand(User user, UserMessageDto userMessageDto, CommandType commandType,UserMessage incomingMessageDto) {
         if(commandType.equals(CommandType.BIRTHDAY)) {
-            return birthdayService.processBirthdayRequest( userMessageDto,"/birthday", 0);
+            return birthdayService.processNewBirthdayRequest( incomingMessageDto, userMessageDto, null);
         } else if (commandType.equals(CommandType.LEAVEREQUEST)) {
             return leaveRequestService.processApplyLeaveRequest(user, incomingMessageDto, userMessageDto, null);
         } else if (commandType.equals(CommandType.DASHBOARD)) {
