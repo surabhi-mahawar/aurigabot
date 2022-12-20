@@ -1,20 +1,16 @@
 package com.aurigabot.entity;
 
+import com.aurigabot.dto.DateValidationDto;
 import com.aurigabot.dto.FlowPayloadDto;
-import com.aurigabot.dto.Validation;
+import com.aurigabot.dto.TextValidationDto;
+import com.aurigabot.dto.ValidationDto;
 import com.aurigabot.enums.CommandType;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.r2dbc.postgresql.codec.Json;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.UUID;
 
-@Setter
-@Getter
 @Builder
 @Data
 @NoArgsConstructor
@@ -34,8 +30,7 @@ public class Flow {
 
     private String question;
     private Integer index;
-
     @Type(type = "jsonb")
-    private Validation validation;
+    private ValidationDto validation;
 }
 

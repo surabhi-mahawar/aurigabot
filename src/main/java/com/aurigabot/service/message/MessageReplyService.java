@@ -150,7 +150,8 @@ public class MessageReplyService {
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
                     if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
                         return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
-                    } else {
+                    }
+                    else {
                         return processInvalidRequest(outUserMessageDto);
                     }
                 }

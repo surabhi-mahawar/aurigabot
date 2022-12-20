@@ -11,34 +11,44 @@ import com.aurigabot.enums.MessagePayloadType;
 import com.aurigabot.repository.FlowRepository;
 import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserMessageRepository;
+import com.aurigabot.repository.UserRepository;
+import com.aurigabot.service.KafkaProducerService;
+import com.aurigabot.service.ValidationService;
 import com.aurigabot.utils.BotUtil;
 import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
-import com.aurigabot.enums.*;
-import lombok.Builder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 @Service
 public class LeaveRequestService {
     @Autowired
     private UserMessageRepository userMessageRepository;
+@Autowired
+    private ValidationService validationService;
 
     @Autowired
     private FlowRepository flowRepository;
 
     @Autowired
+    private KafkaProducerService kafkaProducerService;
+
+    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
+    @Value(value = "${kafka.topic.outbound.message}")
+    private String outboundTopic;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Process leave request flow
@@ -60,7 +70,7 @@ public class LeaveRequestService {
                         @Override
                         public Mono<UserMessageDto> apply(List<LeaveRequest> leaveRequests) {
                             /* Leave request object */
-                            LeaveRequest leaveRequest = null;
+                           LeaveRequest leaveRequest = null;
                             if (leaveRequests.size() > 0 && leaveRequests.get(0) != null){
                                 leaveRequest = leaveRequests.get(0);
                             } else{
@@ -85,32 +95,42 @@ public class LeaveRequestService {
                                 } else if (lastIndex == 2){
                                     result = processLeaveDates(2,leaveRequest, outUserMessageDto, incomingUserMessage, lastFlow);
                                 } else {
-                                    result = processLeaveType(leaveRequest, outUserMessageDto, incomingUserMessage, lastFlow);
+                                    result = processLeaveType(user,leaveRequest, outUserMessageDto, incomingUserMessage, lastFlow);
                                 }
 
+                                LeaveRequest finalLeaveRequest = leaveRequest;
                                 return result.map(new Function<Pair<Boolean, String>, Mono<UserMessageDto>>() {
                                     @Override
-                                    public Mono<UserMessageDto> apply(Pair<Boolean, String> resultPait) {
+                                    public Mono<UserMessageDto> apply(Pair<Boolean, String> resultPair) {
                                         /**
                                          * If the result is true, process for next reply
-                                         * Else send error messsage from result pair as reply
+                                         * Else send error message from result pair as reply
                                          */
-                                        if(resultPait.getFirst().booleanValue() == true) {
+                                        if(resultPair.getFirst().booleanValue() == true) {
                                             /**
                                              * If result pair message is not empty & is last index, send this as reply
                                              * Else find the next flow question and send it as reply
                                              */
-                                            if(!resultPait.getSecond().isEmpty() && lastIndex == 3) {
-                                                outUserMessageDto.setMessage(resultPait.getSecond());
+                                            if(!resultPair.getSecond().isEmpty() && lastIndex == 3) {
+                                                outUserMessageDto.setMessage(resultPair.getSecond());
                                                 outUserMessageDto.setFlow(null);
                                                 outUserMessageDto.setIndex(0);
 
                                                 MessagePayloadDto payload = MessagePayloadDto.builder()
-                                                        .message(resultPait.getSecond())
+                                                        .message(resultPair.getSecond())
                                                         .msgType(MessagePayloadType.TEXT)
                                                         .build();
                                                 outUserMessageDto.setPayload(payload);
-                                                return Mono.just(outUserMessageDto);
+                                                Mono<Boolean> sent =  approveLeaveRequest(user, outUserMessageDto,finalLeaveRequest,lastFlow);
+                                                return sent.map(new Function<Boolean, UserMessageDto>() {
+                                                    @Override
+                                                    public UserMessageDto apply(Boolean aBoolean) {
+                                                        if (aBoolean != true) {
+                                                            outUserMessageDto.setMessage("Something went wrong");
+                                                        }
+                                                        return outUserMessageDto;
+                                                    }
+                                                });
                                             } else {
                                                 return getFlowByIndex(lastIndex+1).collectList()
                                                         .map(new Function<List<Flow>, UserMessageDto>() {
@@ -134,12 +154,12 @@ public class LeaveRequestService {
                                                         });
                                             }
                                         } else {
-                                            outUserMessageDto.setMessage(resultPait.getSecond());
+                                            outUserMessageDto.setMessage(resultPair.getSecond());
                                             outUserMessageDto.setFlow(lastFlow);
                                             outUserMessageDto.setIndex(lastIndex);
 
                                             MessagePayloadDto payload = MessagePayloadDto.builder()
-                                                    .message(resultPait.getSecond())
+                                                    .message(resultPair.getSecond())
                                                     .msgType(MessagePayloadType.TEXT)
                                                     .build();
                                             outUserMessageDto.setPayload(payload);
@@ -207,25 +227,23 @@ public class LeaveRequestService {
      * @return
      */
     private Mono<Pair<Boolean, String>> processLeaveReason(LeaveRequest leaveRequest, UserMessageDto userMessageDto, UserMessage incomingUserMessage, Flow flow) {
-        Boolean valid = true;
-        String errorMsg = "";
-        Pattern p = Pattern.compile("^[a-zA-Z0-9! ]*$");
-        boolean str = p.matcher(incomingUserMessage.getMessage()).matches();
-        if (str){
+        Boolean valid;
+        String result = validationService.fieldValidator(flow.getValidation(),incomingUserMessage.getMessage(),null,null).getFirst();
+        if (result.equals("pass")){
+            valid=true;
             leaveRequest.setReason(incomingUserMessage.getMessage());
         } else{
             valid = false;
-            errorMsg = "please use only alphabets and numbers";
         }
         if(valid) {
             return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, Pair<Boolean, String>>() {
                 @Override
                 public Pair<Boolean, String> apply(LeaveRequest leaveRequest) {
-                    return Pair.of(true, "");
+                    return Pair.of(true, result);
                 }
             });
         } else {
-            return Mono.just(Pair.of(valid, errorMsg));
+            return Mono.just(Pair.of(valid, result));
         }
     }
 
@@ -239,31 +257,28 @@ public class LeaveRequestService {
      * @return
      */
     private Mono<Pair<Boolean, String>> processLeaveDates(Integer index, LeaveRequest leaveRequest, UserMessageDto userMessageDto, UserMessage incomingUserMessage, Flow flow) {
-        Boolean valid = true;
-        String errorMsg = "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
-        try {
-            LocalDate date = LocalDate.parse(incomingUserMessage.getMessage(), formatter);
-            if(date.compareTo(LocalDate.now()) < 0) {
-                valid = false;
-                errorMsg = "Entered date should be greator than or equal to current date.";
-            } else {
+        Pair<String,Object> valid = validationService.fieldValidator(flow.getValidation(),incomingUserMessage.getMessage(),index,leaveRequest);
+        String result = valid.getFirst();
+        LocalDate date = (LocalDate) valid.getSecond();
+        if(result=="pass") {
+//            LocalDate date = (LocalDate) valid.getSecond();
+//            if(date.compareTo(LocalDate.now()) < 0) {
+//                result = "Try again !! \nEntered date should be greater than or equal to current date.";
+//            } else {
                 if (index == 1) {
                     leaveRequest.setFromDate(date);
+                    result="pass";
                 } else {
                     leaveRequest.setToDate(date);
                     if(leaveRequest.getToDate().compareTo(leaveRequest.getFromDate()) < 0) {
-                        valid = false;
-                        errorMsg = "To date should be greator than or equal to from date.";
+                        result = "Try again !! \nTo date should be greater than or equal to from date i.e "+leaveRequest.getFromDate();
+                        Mono.just(Pair.of(false, result));
+                    }
+                    else {
+                        result="pass";
                     }
                 }
-            }
-        } catch (DateTimeParseException e){
-            valid = false;
-            errorMsg = "please enter the date in proper format i.e dd-mm-yyyy eg. 11-02-2000";
-        }
-        if(valid) {
+//            }
             return leaveRequestRepository.save(leaveRequest).map(new Function<LeaveRequest, Pair<Boolean, String>>() {
                 @Override
                 public Pair<Boolean, String> apply(LeaveRequest leaveRequest) {
@@ -271,7 +286,7 @@ public class LeaveRequestService {
                 }
             });
         } else {
-            return Mono.just(Pair.of(valid, errorMsg));
+            return Mono.just(Pair.of(false, result));
         }
     }
 
@@ -282,12 +297,12 @@ public class LeaveRequestService {
      * @param incomingUserMessage
      * @return
      */
-    private Mono<Pair<Boolean, String>> processLeaveType(LeaveRequest leaveRequest, UserMessageDto userMessageDto, UserMessage incomingUserMessage, Flow flow) {
+    private Mono<Pair<Boolean, String>> processLeaveType(User user,LeaveRequest leaveRequest, UserMessageDto userMessageDto, UserMessage incomingUserMessage, Flow flow) {
         Boolean valid = true;
         String errorMsg = "";
-        if(incomingUserMessage.getMessage().equals(LeaveType.CL.getDisplayValue())){
+        if(incomingUserMessage.getMessage().toUpperCase().equals(LeaveType.CL.getDisplayValue())){
             leaveRequest.setLeaveType(LeaveType.CL);
-        } else if (incomingUserMessage.getMessage().equals(LeaveType.PL.getDisplayValue())){
+        } else if (incomingUserMessage.getMessage().toUpperCase().equals(LeaveType.PL.getDisplayValue())){
             leaveRequest.setLeaveType(LeaveType.PL);
         } else {
             valid = false;
@@ -305,4 +320,26 @@ public class LeaveRequestService {
             return Mono.just(Pair.of(valid, errorMsg));
         }
     }
+
+    public Mono<Boolean> approveLeaveRequest(User user,UserMessageDto outUserMessageDto,LeaveRequest leaveRequest, Flow flow) {
+        ObjectMapper Obj = new ObjectMapper();
+        UserMessageDto  managerMessage = Obj.convertValue(outUserMessageDto,UserMessageDto.class);
+
+       return userRepository.findById(user.getManagerId()).map(new Function<User, Boolean>() {
+            @Override
+            public Boolean apply(User manager) {
+                managerMessage.setToSource(manager.getTelegramChatId());
+                managerMessage.setMessage(user.getName()+ " has applied for leave from "+ leaveRequest.getFromDate() + " to " + leaveRequest.getToDate()+ " please reply with approve or reject ");
+                managerMessage.setToUserId(manager.getId());
+                try {
+                    String jsonStr = Obj.writeValueAsString(managerMessage);
+                    kafkaProducerService.sendMessage(jsonStr,outboundTopic);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                return true;
+            }
+        });
+    }
+
 }

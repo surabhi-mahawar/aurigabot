@@ -4,6 +4,7 @@ public enum CommandType {
 	REGTELEGRAMUSER("/regTelegramUser"),
 	BIRTHDAY("/birthday"),
 	LEAVEREQUEST("/leaverequest"),
+	APPROVELEAVEREQUEST("/approveleaverequest"),
 	DASHBOARD("/dashboard"),
 	TODO("/todo");
 

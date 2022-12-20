@@ -2,6 +2,7 @@ package com.aurigabot.entity.converters;
 
 import com.aurigabot.dto.FlowPayloadDto;
 import com.aurigabot.dto.MessagePayloadDto;
+import com.aurigabot.dto.ValidationDto;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.entity.Flow;
 import com.aurigabot.enums.ChannelProvider;
@@ -30,8 +31,10 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
         Flow flow;
         if(source.get("flow", UUID.class) != null) {
             FlowPayloadDto flowPayloadDto = null;
+            ValidationDto validationDto = null;
             try {
                 flowPayloadDto = mapper.readValue(source.get("fl_payload", String.class), FlowPayloadDto.class);
+                validationDto = mapper.readValue(source.get("fl_validation", String.class), ValidationDto.class);
             } catch(JsonProcessingException ex) {
 
             }
@@ -41,6 +44,7 @@ public class UserMessageReadConverter implements Converter<Row, UserMessage> {
                     .index(source.get("fl_index", Integer.class))
 //                    .payload(source.get("fl_payload", FlowPayloadDto.class))
                     .payload(flowPayloadDto)
+                    .validation(validationDto)
                     .build();
         } else {
             flow = null;
