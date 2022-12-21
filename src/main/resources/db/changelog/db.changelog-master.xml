@@ -10,5 +10,4 @@
 
     <include file="db/migration/001_schema.sql"/>
     <include file="db/migration/002_insert.sql"/>
-    <include file="db/migration/003_insert.sql"/>
 </databaseChangeLog>

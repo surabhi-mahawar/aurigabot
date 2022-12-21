@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     dob DATE,
     password VARCHAR(100) NOT NULL,
     role text NOT NULL,
+    manager_id uuid,
     joined_on timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP

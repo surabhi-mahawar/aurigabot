@@ -9,6 +9,7 @@ import com.aurigabot.repository.UserRepository;
 import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.enums.MessagePayloadType;
+import com.aurigabot.service.ValidationService;
 import com.aurigabot.utils.BotUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
@@ -32,6 +33,9 @@ public class BirthdayService {
 
     @Autowired
     private FlowRepository flowRepository;
+
+    @Autowired
+    private ValidationService validationService;
 
     /**
      * Process /birthday command and return list of birthdays for today
@@ -89,71 +93,62 @@ public class BirthdayService {
         if(lastSentMessage != null && lastSentMessage.getFlow().getCommandType().equals(CommandType.BIRTHDAY)) {
             Flow lastFlow = lastSentMessage.getFlow();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            Mono<Pair<Boolean, String>> result = processBirthdayDates(incomingUserMessage);
-            return result.map(new Function<Pair<Boolean, String>, Mono<UserMessageDto>>() {
-                @Override
-                public Mono<UserMessageDto> apply(Pair<Boolean, String> resultPair) {
-                    if(resultPair.getFirst().booleanValue() == true) {
+//            Mono<Pair<Boolean, String>> result = processBirthdayDates(incomingUserMessage);
+            Pair<String, Object> result = validationService.fieldValidator(lastFlow.getValidation(),incomingUserMessage.getMessage());
 
+            if(result.getFirst() == "pass") {
+                try {
+                    LocalDate dob = LocalDate.parse(result.getSecond().toString(), formatter);
+                    return userRepository.findAllByDob(dob).collectList().map(new Function<List<User>, UserMessageDto>() {
+                        @Override
+                        public UserMessageDto apply(List<User> users) {
 
-                        try {
-                            LocalDate dob = LocalDate.parse(incomingUserMessage.getMessage(), formatter);
-                            return userRepository.findAllByDob(dob).collectList().map(new Function<List<User>, UserMessageDto>() {
-                                @Override
-                                public UserMessageDto apply(List<User> users) {
+                            String message = "";
+                            if (userMessageDto.getMessage() != null) {
+                                message = userMessageDto.getMessage() + "\n";
+                            }
 
-                                    String message = "";
-                                    if (userMessageDto.getMessage() != null) {
-                                        message = userMessageDto.getMessage() + "\n";
-                                    }
-
-                                    if (users.size() == 0) {
-                                        message += "There are no birthdays for this date.";
-                                    } else {
-                                        message += "Please find the list of birthdays below.\n";
-                                        for (User u : users) {
-                                            message += "" + u.getName();
-                                        }
-                                    }
-                                    message+="\n\nPlease select a option from the list to proceed further.";
-
-                                    userMessageDto.setMessage(message);
-                                    userMessageDto.setFlow(null);
-                                    userMessageDto.setIndex(0);
-                                    MessagePayloadDto payload = MessagePayloadDto.builder()
-                                            .message(message)
-                                            .msgType(MessagePayloadType.TEXT)
-                                            .choices(BotUtil.getCommandChoices())
-                                            .build();
-
-                                    userMessageDto.setPayload(payload);
-
-                                    return userMessageDto;
+                            if (users.size() == 0) {
+                                message += "There are no birthdays for this date.";
+                            } else {
+                                message += "Please find the list of birthdays below.\n";
+                                for (User u : users) {
+                                    message += "" + u.getName();
                                 }
-                            });
-                        } catch (Exception e) {
-                            return Mono.just(null);
-                        }
-                    }
-                    else {
-                        userMessageDto.setMessage(resultPair.getSecond());
-                        userMessageDto.setFlow(lastFlow);
-                        userMessageDto.setIndex(0);
+                            }
+                            message+="\n\nPlease select a option from the list to proceed further.";
 
-                        MessagePayloadDto payload = MessagePayloadDto.builder()
-                                .message(resultPair.getSecond())
-                                .msgType(MessagePayloadType.TEXT)
-                                .build();
-                        userMessageDto.setPayload(payload);
-                        return Mono.just(userMessageDto);
-                    }
+                            userMessageDto.setMessage(message);
+                            userMessageDto.setFlow(null);
+                            userMessageDto.setIndex(0);
+                            MessagePayloadDto payload = MessagePayloadDto.builder()
+                                    .message(message)
+                                    .msgType(MessagePayloadType.TEXT)
+                                    .choices(BotUtil.getCommandChoices())
+                                    .build();
+
+                            userMessageDto.setPayload(payload);
+
+                            return userMessageDto;
+                        }
+                    });
+                } catch (Exception e) {
+                    return Mono.just(null);
                 }
-            }).flatMap(new Function<Mono<UserMessageDto>, Mono<? extends UserMessageDto>>() {
-                @Override
-                public Mono<? extends UserMessageDto> apply(Mono<UserMessageDto> userMessageDtoMono) {
-                    return userMessageDtoMono;
-                }
-            });
+            }
+            else {
+                userMessageDto.setMessage(result.getFirst());
+                userMessageDto.setFlow(lastFlow);
+                userMessageDto.setIndex(0);
+
+                MessagePayloadDto payload = MessagePayloadDto.builder()
+                        .message(result.getFirst())
+                        .msgType(MessagePayloadType.TEXT)
+                        .build();
+                userMessageDto.setPayload(payload);
+                return Mono.just(userMessageDto);
+            }
+
         }
         else{
             return flowRepository.findByIndexAndCommandType(0, CommandType.BIRTHDAY.getDisplayValue()).collectList().map(new Function<List<Flow>, UserMessageDto>() {
@@ -178,21 +173,21 @@ public class BirthdayService {
         }
     }
 
-    private Mono<Pair<Boolean, String>> processBirthdayDates( UserMessage incomingUserMessage) {
-        Boolean valid = true;
-        String errorMsg = "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
-        try {
-            LocalDate date = LocalDate.parse(incomingUserMessage.getMessage(), formatter);
-            if(date.compareTo(LocalDate.now()) < 0) {
-                valid = false;
-                errorMsg = "Entered date should be greator than or equal to current date.";
-            }
-        } catch (DateTimeParseException e){
-            valid = false;
-            errorMsg = "Please enter the date in proper format i.e dd-mm-yyyy eg. 11-02-2000";
-        }
-        return Mono.just(Pair.of(valid, errorMsg));
-    }
+//    private Mono<Pair<Boolean, String>> processBirthdayDates( UserMessage incomingUserMessage) {
+//        Boolean valid = true;
+//        String errorMsg = "";
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+//
+//        try {
+//            LocalDate date = LocalDate.parse(incomingUserMessage.getMessage(), formatter);
+//            if(date.compareTo(LocalDate.now()) < 0) {
+//                valid = false;
+//                errorMsg = "Entered date should be greator than or equal to current date.";
+//            }
+//        } catch (DateTimeParseException e){
+//            valid = false;
+//            errorMsg = "Please enter the date in proper format i.e dd-mm-yyyy eg. 11-02-2000";
+//        }
+//        return Mono.just(Pair.of(valid, errorMsg));
+//    }
 }

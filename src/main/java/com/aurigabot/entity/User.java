@@ -25,6 +25,7 @@ public class User implements Persistable {
     private Date dob;
     private String role;
     private UUID employeeId;
+    private UUID managerId;
     private String telegramChatId;
 
     @Override

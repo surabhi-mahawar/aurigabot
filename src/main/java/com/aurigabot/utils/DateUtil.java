@@ -12,7 +12,7 @@ public class DateUtil {
      * @return
      */
     public static String getGlobalDateFormat() {
-        return "yyyy-MM-dd";
+        return "dd-MM-yyyy";
     }
 
     /**
@@ -20,7 +20,7 @@ public class DateUtil {
      * @return
      */
     public static String getGlobalDateTimeFormat() {
-        return "yyyy-MM-dd'T'HH:mm:ss'Z'";
+        return "dd-MM-yyyy'T'HH:mm:ss'Z'";
     }
 
     public static Boolean isValidDateFormat(String format, String date) {

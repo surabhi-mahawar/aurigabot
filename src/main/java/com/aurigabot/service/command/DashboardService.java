@@ -46,7 +46,7 @@ public class DashboardService {
                     }
                     for(int i=0;i<leaveRequests.size();i++){
                         message += "From: "+leaveRequests.get(i).getFromDate().toString()
-                                +", to: "+leaveRequests.get(i).getFromDate().toString()
+                                +", to: "+leaveRequests.get(i).getToDate().toString()
                                 +", status: "+leaveRequests.get(i).getStatus()+"\n";
                     }
                 }

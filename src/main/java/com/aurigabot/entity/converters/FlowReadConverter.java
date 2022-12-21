@@ -2,6 +2,7 @@ package com.aurigabot.entity.converters;
 
 import com.aurigabot.dto.FlowPayloadDto;
 import com.aurigabot.dto.MessagePayloadDto;
+import com.aurigabot.dto.ValidationDto;
 import com.aurigabot.entity.Flow;
 import com.aurigabot.enums.CommandType;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,8 +27,10 @@ public class FlowReadConverter implements Converter<Row, Flow> {
         ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
 
         FlowPayloadDto flowPayloadDto = null;
+        ValidationDto validationDto=null;
         try {
             flowPayloadDto = mapper.readValue(source.get("payload", String.class), FlowPayloadDto.class);
+            validationDto = mapper.readValue(source.get("validation", String.class), ValidationDto.class);
         } catch(JsonProcessingException ex) {
 
         }
@@ -36,6 +39,7 @@ public class FlowReadConverter implements Converter<Row, Flow> {
                 .question(source.get("question", String.class))
                 .index(source.get("index", Integer.class))
                 .payload(flowPayloadDto)
+                .validation(validationDto)
                 .build();
     }
 }

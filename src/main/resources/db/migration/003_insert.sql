@@ -1,1 +1,0 @@
-insert into flow (command_type, question, index, payload) values ('/birthday', 'Please enter the date you want to see birthdays of.', 0, '{"question": "Please enter the date you want to see birthdays of.", "questionType": "TEXT", "choices": null, "mediaUrl": null}');
