@@ -321,7 +321,7 @@ public class LeaveRequestService {
                             @Override
                             public Mono<Boolean> apply(List<LeaveRequest> leaveRequests) {
                                 for (EmployeeManager em : employeeManagers) {
-                                    String msgText= "<b>"+users.get(0).getName()+"</b>" + " has applied for leave\n from " + "<b>"+leaveRequests.get(0).getFromDate() +"</b>" + " to " + "<b>"+leaveRequests.get(0).getToDate()+"</b>"+"\n <b>Reason:- </b>"+leaveRequests.get(0).getReason()+"\n<b>Leave Type:- </b>"+leaveRequests.get(0).getLeaveType().getDisplayValue() + "\nplease reply with <b>approve or reject </b>";
+                                    String msgText= "<b>"+users.get(0).getName()+"</b>" + " has applied for leave\nfrom " + "<b>"+leaveRequests.get(0).getFromDate() +"</b>" + " to " + "<b>"+leaveRequests.get(0).getToDate()+"</b>"+"\n<b>Reason:- </b>"+leaveRequests.get(0).getReason()+"\n<b>Leave Type:- </b>"+leaveRequests.get(0).getLeaveType().getDisplayValue() + "\nplease reply with <b>Approve or Reject </b>";
                                     managerMessage.setToSource(em.getManager().getTelegramChatId());
                                     managerMessage.setMessage(msgText);
                                     managerMessage.setToUserId(em.getManager().getId());
