@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Builder
 @Data
-@Table( name = "table_manager")
+@Table( name = "employee_manager")
 public class EmployeeManager {
     @Id
     private UUID id;

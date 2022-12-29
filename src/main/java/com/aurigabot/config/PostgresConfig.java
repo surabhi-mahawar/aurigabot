@@ -32,6 +32,7 @@ public class PostgresConfig {
         converters.add(new UserWriteConverter());
         converters.add(new LeaveRequestReadConverter());
         converters.add(new LeaveRequestWriteConverter());
+        converters.add(new EmployeeManagerReadConverter());
         R2dbcDialect dialect = DialectResolver.getDialect(connectionFactory);
         return R2dbcCustomConversions.of(dialect, converters);
     }

@@ -9,7 +9,9 @@ public enum CommandType {
 	TODO("/todo"),
 	EVENTS("/events"),
 	CREATEEVENT("/createevents"),
-	LISTEVENTS("/listevents");
+	LISTEVENTS("/listevents"),
+	APPROVE("/approve"),
+	REJECT("/reject");
 
 	private String commandType;
 

@@ -52,6 +52,18 @@ public class BotUtil {
         }
         return list;
     }
+    public static List<Map<String, String>> getLeaveCommandsList() {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (CommandType value : CommandType.values()) {
+            if(value.equals(CommandType.APPROVE)||value.equals(CommandType.REJECT)) {
+                Map<String, String> data = new HashMap();
+                data.put("key", value.toString());
+                data.put("value", value.getDisplayValue());
+                list.add(data);
+            }
+        }
+        return list;
+    }
 
     public static List<Map<String, String>> getAllCommandsList() {
         List<Map<String, String>> list = new ArrayList<>();
@@ -105,6 +117,18 @@ public class BotUtil {
     public static ArrayList<MessagePayloadChoiceDto> getEventCommandChoices() {
         ArrayList<MessagePayloadChoiceDto> choices = new ArrayList<>();
         BotUtil.getEventCommandsList().forEach(command -> {
+            MessagePayloadChoiceDto choice = MessagePayloadChoiceDto.builder()
+                    .key(command.get("key"))
+                    .text(command.get("value"))
+                    .build();
+            choices.add(choice);
+        });
+        return choices;
+    }
+
+    public static ArrayList<MessagePayloadChoiceDto> getLeaveCommandChoices() {
+        ArrayList<MessagePayloadChoiceDto> choices = new ArrayList<>();
+        BotUtil.getLeaveCommandsList().forEach(command -> {
             MessagePayloadChoiceDto choice = MessagePayloadChoiceDto.builder()
                     .key(command.get("key"))
                     .text(command.get("value"))

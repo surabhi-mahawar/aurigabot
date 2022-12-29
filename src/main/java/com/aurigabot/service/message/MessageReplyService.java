@@ -76,6 +76,9 @@ public class MessageReplyService {
                         UserMessageDto dto = (UserMessageDto) booleanObjectPair.getRight();
                         String jsonStr = mapper.writeValueAsString(dto);
                         kafkaProducerService.sendMessage(jsonStr, outboundTopic);
+                        if (dto.getMessage().contains("submitted")){
+                            leaveRequestService.notifyManager(dto).subscribe();
+                        }
                     } else {
                         log.error(booleanObjectPair.getRight().toString());
                     }
@@ -151,6 +154,7 @@ public class MessageReplyService {
                 public Mono<UserMessageDto> apply(UserMessage lastMessage) {
                     if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LEAVEREQUEST)) {
                         return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
+
                     } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.BIRTHDAY)) {
                         return birthdayService.processNewBirthdayRequest(incomingUserMessage, outUserMessageDto, lastMessage);
                     } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LISTEVENTS) || lastMessage.getFlow().getCommandType().equals(CommandType.CREATEEVENT)) {
@@ -239,7 +243,11 @@ public class MessageReplyService {
             return processToDoRequest(userMessageDto);
         } else if(commandType.equals(CommandType.EVENTS) || commandType.equals(CommandType.LISTEVENTS) || commandType.equals(CommandType.CREATEEVENT)){
             return eventsService.processEventsRequest(user, incomingMessageDto, userMessageDto, commandType, null);
-        }else {
+        }else if (commandType.equals(CommandType.APPROVE)) {
+            return leaveRequestService.handleLeaveRequest(user, userMessageDto, commandType);
+        }else if (commandType.equals(CommandType.REJECT)) {
+            return leaveRequestService.handleLeaveRequest(user, userMessageDto, commandType);
+        } else {
             return processInvalidRequest(userMessageDto);
         }
     }

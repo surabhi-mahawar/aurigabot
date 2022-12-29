@@ -1,17 +1,11 @@
 package com.aurigabot.service.command;
 
-import com.aurigabot.entity.Flow;
-import com.aurigabot.entity.LeaveRequest;
-import com.aurigabot.entity.User;
-import com.aurigabot.entity.UserMessage;
+import com.aurigabot.entity.*;
 import com.aurigabot.enums.CommandType;
 import com.aurigabot.enums.LeaveStatus;
 import com.aurigabot.enums.LeaveType;
 import com.aurigabot.enums.MessagePayloadType;
-import com.aurigabot.repository.FlowRepository;
-import com.aurigabot.repository.LeaveRequestRepository;
-import com.aurigabot.repository.UserMessageRepository;
-import com.aurigabot.repository.UserRepository;
+import com.aurigabot.repository.*;
 import com.aurigabot.service.KafkaProducerService;
 import com.aurigabot.service.ValidationService;
 import com.aurigabot.utils.BotUtil;
@@ -34,6 +28,9 @@ import java.util.function.Function;
 public class LeaveRequestService {
     @Autowired
     private UserMessageRepository userMessageRepository;
+
+    @Autowired
+    private EmployeeManagerRepository employeeManagerRepository;
 @Autowired
     private ValidationService validationService;
 
@@ -97,8 +94,6 @@ public class LeaveRequestService {
                                 } else {
                                     result = processLeaveType(user,leaveRequest, outUserMessageDto, incomingUserMessage, lastFlow);
                                 }
-
-                                LeaveRequest finalLeaveRequest = leaveRequest;
                                 return result.map(new Function<Pair<Boolean, String>, Mono<UserMessageDto>>() {
                                     @Override
                                     public Mono<UserMessageDto> apply(Pair<Boolean, String> resultPair) {
@@ -121,16 +116,7 @@ public class LeaveRequestService {
                                                         .msgType(MessagePayloadType.TEXT)
                                                         .build();
                                                 outUserMessageDto.setPayload(payload);
-                                                Mono<Boolean> sent =  approveLeaveRequest(user, outUserMessageDto,finalLeaveRequest,lastFlow);
-                                                return sent.map(new Function<Boolean, UserMessageDto>() {
-                                                    @Override
-                                                    public UserMessageDto apply(Boolean aBoolean) {
-                                                        if (aBoolean != true) {
-                                                            outUserMessageDto.setMessage("Something went wrong");
-                                                        }
-                                                        return outUserMessageDto;
-                                                    }
-                                                });
+                                                return Mono.just(outUserMessageDto);
                                             } else {
                                                 return getFlowByIndex(lastIndex+1).collectList()
                                                         .map(new Function<List<Flow>, UserMessageDto>() {
@@ -262,9 +248,6 @@ public class LeaveRequestService {
 //        LocalDate date = (LocalDate) valid.getSecond();
         if(result=="pass") {
             LocalDate date = (LocalDate) valid.getSecond();
-//            if(date.compareTo(LocalDate.now()) < 0) {
-//                result = "Try again !! \nEntered date should be greater than or equal to current date.";
-//            } else {
                 if (index == 1) {
                     leaveRequest.setFromDate(date);
                     result="pass";
@@ -272,6 +255,7 @@ public class LeaveRequestService {
                     leaveRequest.setToDate(date);
                     if(leaveRequest.getToDate().compareTo(leaveRequest.getFromDate()) < 0) {
                         result = "Try again !! \nTo date should be greater than or equal to from date i.e "+leaveRequest.getFromDate();
+
                         return Mono.just(Pair.of(false, result));
                     }
                     else {
@@ -321,25 +305,110 @@ public class LeaveRequestService {
         }
     }
 
-    public Mono<Boolean> approveLeaveRequest(User user,UserMessageDto outUserMessageDto,LeaveRequest leaveRequest, Flow flow) {
+    public Mono<Boolean> notifyManager(UserMessageDto outUserMessageDto) {
+
         ObjectMapper Obj = new ObjectMapper();
         UserMessageDto  managerMessage = Obj.convertValue(outUserMessageDto,UserMessageDto.class);
 
-       return userRepository.findById(user.getManagerId()).map(new Function<User, Boolean>() {
+        return userRepository.findByTelegramChatId(outUserMessageDto.getToSource()).collectList().map(new Function<List<User>, Mono<Mono<Boolean>>>() {
             @Override
-            public Boolean apply(User manager) {
-                managerMessage.setToSource(manager.getTelegramChatId());
-                managerMessage.setMessage(user.getName()+ " has applied for leave from "+ leaveRequest.getFromDate() + " to " + leaveRequest.getToDate()+ " please reply with approve or reject ");
-                managerMessage.setToUserId(manager.getId());
-                try {
-                    String jsonStr = Obj.writeValueAsString(managerMessage);
-                    kafkaProducerService.sendMessage(jsonStr,outboundTopic);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-                return true;
+            public Mono<Mono<Boolean>> apply(List<User> users) {
+                return employeeManagerRepository.findByEmployee(users.get(0).getId()).collectList().map(new Function<List<EmployeeManager>, Mono<Boolean>>() {
+                    @Override
+                    public Mono<Boolean> apply(List<EmployeeManager> employeeManagers) {
+
+                        return leaveRequestRepository.findByEmployeeIdAndStatus(users.get(0).getId(),LeaveStatus.PENDING.name()).collectList().flatMap(new Function<List<LeaveRequest>, Mono<Boolean>>() {
+                            @Override
+                            public Mono<Boolean> apply(List<LeaveRequest> leaveRequests) {
+                                for (EmployeeManager em : employeeManagers) {
+                                    String msgText= "<b>"+users.get(0).getName()+"</b>" + " has applied for leave\n from " + "<b>"+leaveRequests.get(0).getFromDate() +"</b>" + " to " + "<b>"+leaveRequests.get(0).getToDate()+"</b>"+"\n <b>Reason:- </b>"+leaveRequests.get(0).getReason()+"\n<b>Leave Type:- </b>"+leaveRequests.get(0).getLeaveType().getDisplayValue() + "\nplease reply with <b>approve or reject </b>";
+                                    managerMessage.setToSource(em.getManager().getTelegramChatId());
+                                    managerMessage.setMessage(msgText);
+                                    managerMessage.setToUserId(em.getManager().getId());
+
+                                    MessagePayloadDto payload = MessagePayloadDto.builder()
+                                            .message(msgText)
+                                            .msgType(MessagePayloadType.TEXT)
+                                            .choices(BotUtil.getLeaveCommandChoices())
+                                            .build();
+
+                                    managerMessage.setPayload(payload);
+
+
+
+                                    try {
+                                        String jsonStr = Obj.writeValueAsString(managerMessage);
+                                        kafkaProducerService.sendMessage(jsonStr, outboundTopic);
+                                    } catch (JsonProcessingException e) {
+//                        return Mono.just(false);
+                                    }
+                                }
+                                return Mono.just(true);
+                            }
+                        });
+                            }
+                        });
+
+            }
+        }).flatMap(new Function<Mono<Mono<Boolean>>, Mono<? extends Boolean>>() {
+            @Override
+            public Mono<? extends Boolean> apply(Mono<Mono<Boolean>> monoMono) {
+                return monoMono.flatMap(new Function<Mono<Boolean>, Mono<? extends Boolean>>() {
+                    @Override
+                    public Mono<? extends Boolean> apply(Mono<Boolean> booleanMono) {
+                        return booleanMono;
+                    }
+                });
             }
         });
+
+    }
+    public Mono<UserMessageDto> handleLeaveRequest(User user, UserMessageDto outUserMessageDto,CommandType commandType) {
+        ObjectMapper Obj = new ObjectMapper();
+        UserMessageDto  employeeMessage = Obj.convertValue(outUserMessageDto,UserMessageDto.class);
+return employeeManagerRepository.findByManager(user.getId()).collectList().map(new Function<List<EmployeeManager>, UserMessageDto>() {
+    @Override
+    public UserMessageDto apply(List<EmployeeManager> employeeManagers) {
+        employeeManagers.forEach((em)->{
+            String msg ="Your leave request has been <b>";
+            employeeMessage.setToUserId(em.getEmployee().getId());
+            employeeMessage.setToSource(em.getEmployee().getTelegramChatId());
+           msg = commandType.equals(CommandType.APPROVE)?msg+"approved":msg+"rejected";
+            employeeMessage.setMessage(msg+"</b>");
+            try {
+                String jsonStr = Obj.writeValueAsString(employeeMessage);
+                kafkaProducerService.sendMessage(jsonStr, outboundTopic);
+            } catch (JsonProcessingException e) {
+//                        return Mono.just(false);
+            }
+        });
+        outUserMessageDto.setMessage("Thank-you");
+        return outUserMessageDto;
+    }
+});
     }
 
+//    public Mono<UserMessageDto> rejectLeaveRequest(User user, UserMessageDto outUserMessageDto) {
+//        ObjectMapper Obj = new ObjectMapper();
+//        UserMessageDto  employeeMessage = Obj.convertValue(outUserMessageDto,UserMessageDto.class);
+//        return employeeManagerRepository.findByManager(user.getId()).collectList().map(new Function<List<EmployeeManager>, UserMessageDto>() {
+//            @Override
+//            public UserMessageDto apply(List<EmployeeManager> employeeManagers) {
+//                employeeManagers.forEach((em)->{
+//                    employeeMessage.setToUserId(em.getEmployee().getId());
+//                    employeeMessage.setToSource(em.getEmployee().getTelegramChatId());
+//                    employeeMessage.setMessage("Your leave request has been Rejected");
+//                    try {
+//                        String jsonStr = Obj.writeValueAsString(employeeMessage);
+//                        kafkaProducerService.sendMessage(jsonStr, outboundTopic);
+//                    } catch (JsonProcessingException e) {
+////                        return Mono.just(false);
+//                    }
+//                });
+//                outUserMessageDto.setMessage("Thank-you");
+//                return outUserMessageDto;
+//            }
+//        });
+//    }
+//
 }
