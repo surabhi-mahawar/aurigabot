@@ -1,4 +1,4 @@
-package com.aurigabot.service;
+package com.aurigabot.service.outbound;
 
 import com.aurigabot.model.telegram.OutboundMessage;
 import com.aurigabot.response.telegram.OutboundResponse;
@@ -7,10 +7,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
-public class TelegramOutboundService {
+public class TelegramService {
     private final WebClient webClient;
 
-    public TelegramOutboundService(String baseUrl) {
+    public TelegramService(String baseUrl) {
         this.webClient = WebClient.builder().baseUrl(baseUrl).build();
     }
 
@@ -25,7 +25,6 @@ public class TelegramOutboundService {
                     return uriBuilder.path("/sendMessage")
                             .queryParam("chat_id", outboundMessage.getChatId())
                             .queryParam("text", outboundMessage.getText())
-                            .queryParam("parse_mode", outboundMessage.getParseMode())
                             .build();
                 })
                 .retrieve()

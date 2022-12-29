@@ -22,6 +22,9 @@ public class KafkaTopicConfig {
     @Value(value = "${kafka.topic.webPortal.inbound.message}")
     private String webPortalTopic;
 
+    @Value(value = "${kafka.topic.netcore.whatsapp.inbound.message}")
+    private String netcoreWhatsappTopic;
+
     @Value(value = "${kafka.topic.user.message}")
     private String messageTopic;
 
@@ -43,6 +46,11 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic webPortalInboundMessageTopic() {
         return new NewTopic(webPortalTopic, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic netcoreWhatsappInboundMessageTopic() {
+        return new NewTopic(netcoreWhatsappTopic, 1, (short) 1);
     }
 
     @Bean

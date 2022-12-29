@@ -1,39 +1,29 @@
 package com.aurigabot.service.message;
 
 import com.aurigabot.adapters.AbstractAdapter;
-import com.aurigabot.adapters.TelegramAdapter;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.entity.User;
 import com.aurigabot.enums.ChannelProvider;
 import com.aurigabot.enums.MessageChannel;
 import com.aurigabot.providers.AdapterFactoryProvider;
-import com.aurigabot.repository.FlowRepository;
-import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserMessageRepository;
 import com.aurigabot.repository.UserRepository;
-import com.aurigabot.response.HttpApiResponse;
 import com.aurigabot.service.KafkaProducerService;
 import com.aurigabot.utils.BotUtil;
 import com.aurigabot.utils.UserMessageUtil;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.lang3.tuple.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.web.JsonProjectingMethodInterceptorFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import reactor.core.publisher.Mono;
 
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Function;
@@ -62,7 +52,7 @@ public class InboundMessageService {
 	 */
 	@KafkaListener(topics = "${kafka.topic.telegram.inbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
 	public void listenTelegramInboundTopic(String message) {
-		log.info("Received Inbound Message: " + message);
+		log.info("Received Telegram Inbound Message: " + message);
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			Object obj = mapper.readValue(message, Message.class);
@@ -71,6 +61,24 @@ public class InboundMessageService {
 			log.error("JsonProcessingException in listenTelegramInboundTopic: "+e.getMessage());
 		} catch (HttpServerErrorException.InternalServerError e) {
 			log.error("InternalServerError in listenTelegramInboundTopic: "+e.getMessage());
+		}
+	}
+
+	/**
+	 * Process inbound messages - for netcore whatsapp inbound message kafka topic
+	 * @param message
+	 */
+	@KafkaListener(topics = "${kafka.topic.netcore.whatsapp.inbound.message}", groupId = "${kafka.inbound.consumer.group.id}")
+	public void listenNetcoreWhatsappInboundTopic(String message) {
+		log.info("Received Netcore Whatsapp Inbound Message: " + message);
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			Object obj = mapper.readValue(message, com.aurigabot.dto.netcore.whatsapp.inbound.Message.class);
+			processInboundMessageTopic(MessageChannel.WHATSAPP, obj);
+		} catch (JsonProcessingException e) {
+			log.error("JsonProcessingException in listenNetcoreWhatsappInboundTopic: "+e.getMessage());
+		} catch (HttpServerErrorException.InternalServerError e) {
+			log.error("InternalServerError in listenNetcoreWhatsappInboundTopic: "+e.getMessage());
 		}
 	}
 

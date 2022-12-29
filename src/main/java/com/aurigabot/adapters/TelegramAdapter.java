@@ -3,7 +3,7 @@ package com.aurigabot.adapters;
 import com.aurigabot.enums.ChannelProvider;
 import com.aurigabot.enums.MessageChannel;
 import com.aurigabot.response.telegram.OutboundResponse;
-import com.aurigabot.service.TelegramOutboundService;
+import com.aurigabot.service.outbound.TelegramService;
 import com.aurigabot.dto.MessagePayloadDto;
 import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.enums.MessagePayloadType;
@@ -76,7 +76,7 @@ public class TelegramAdapter  implements AbstractAdapter {
     public Mono<UserMessageDto> sendOutboundMessage(UserMessageDto userMessageDto) {
         OutboundMessage outboundMessage = (OutboundMessage) convertOutboundMsgFromMessageFormat(userMessageDto);
 
-        return (new TelegramOutboundService(outboundBaseUrl)).sendOutboundMessage(outboundMessage)
+        return (new TelegramService(outboundBaseUrl)).sendOutboundMessage(outboundMessage)
                 .map(new Function<OutboundResponse, UserMessageDto>() {
                     @Override
                     public UserMessageDto apply(OutboundResponse outboundResponse) {

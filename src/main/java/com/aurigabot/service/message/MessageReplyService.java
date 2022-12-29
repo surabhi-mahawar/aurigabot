@@ -35,9 +35,6 @@ public class MessageReplyService {
     private UserRepository userRepository;
 
     @Autowired
-    private FlowRepository flowRepository;
-
-    @Autowired
     private UserMessageRepository userMessageRepository;
 
     @Autowired
@@ -142,8 +139,21 @@ public class MessageReplyService {
          * If user is not found, proceed with register telegram chat id of user flow
          */
 
-        if(user == null && incomingUserMessage.getChannel()== MessageChannel.TELEGRAM) {
-            return telegramService.processUnregisteredTelegramUser(incomingUserMessage, outUserMessageDto);
+        if(user == null) {
+            if(incomingUserMessage.getChannel()== MessageChannel.TELEGRAM) {
+                return telegramService.processUnregisteredTelegramUser(incomingUserMessage, outUserMessageDto);
+            } else {
+                String msgText = "We could not identify you. We cannot proceed with your request.";
+                outUserMessageDto.setMessage(msgText);
+
+                MessagePayloadDto payload = MessagePayloadDto.builder()
+                        .message(msgText)
+                        .msgType(MessagePayloadType.TEXT)
+                        .build();
+                outUserMessageDto.setPayload(payload);
+
+                return Mono.just(outUserMessageDto);
+            }
         } else if (BotUtil.isBotStartingMessage(incomingUserMessage.getMessage())) {
             return processBotStartingMessage(user, outUserMessageDto);
         } else if(commandType != null) {
