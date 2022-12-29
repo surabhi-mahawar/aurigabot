@@ -272,7 +272,7 @@ public class LeaveRequestService {
                     leaveRequest.setToDate(date);
                     if(leaveRequest.getToDate().compareTo(leaveRequest.getFromDate()) < 0) {
                         result = "Try again !! \nTo date should be greater than or equal to from date i.e "+leaveRequest.getFromDate();
-                        Mono.just(Pair.of(false, result));
+                        return Mono.just(Pair.of(false, result));
                     }
                     else {
                         result="pass";

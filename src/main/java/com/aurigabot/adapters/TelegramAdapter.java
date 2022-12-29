@@ -62,6 +62,7 @@ public class TelegramAdapter  implements AbstractAdapter {
         OutboundMessage outboundMessage = OutboundMessage.builder()
                 .text(text.toString())
                 .chatId(userMessage.getToSource())
+                .parseMode("html")
                 .build();
 
         return outboundMessage;

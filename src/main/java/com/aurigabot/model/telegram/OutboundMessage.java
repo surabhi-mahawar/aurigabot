@@ -10,4 +10,6 @@ import lombok.*;
 public class OutboundMessage {
     private String text;
     private String chatId;
+
+    private String parseMode;
 }

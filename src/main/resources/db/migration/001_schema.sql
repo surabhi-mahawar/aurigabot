@@ -77,3 +77,15 @@ CREATE TABLE IF NOT EXISTS employee_manager(
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS google_tokens (
+    id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY ,
+    employee_id uuid REFERENCES users(id),
+    access_token varchar(255) unique NOT NULL,
+    email varchar(80) unique DEFAULT NULL,
+    name varchar(80) DEFAULT NULL,
+    photo varchar(255) DEFAULT NULL,
+    refresh_token varchar(255) DEFAULT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    );

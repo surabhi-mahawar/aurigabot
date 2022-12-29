@@ -10,10 +10,8 @@ import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserMessageRepository;
 import com.aurigabot.repository.UserRepository;
 import com.aurigabot.service.KafkaProducerService;
-import com.aurigabot.service.command.BirthdayService;
-import com.aurigabot.service.command.DashboardService;
-import com.aurigabot.service.command.LeaveRequestService;
-import com.aurigabot.service.command.TelegramService;
+import com.aurigabot.service.calendar_events.GoogleAuthService;
+import com.aurigabot.service.command.*;
 import com.aurigabot.utils.BotUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,6 +54,9 @@ public class MessageReplyService {
 
     @Autowired
     private LeaveRequestService leaveRequestService;
+
+    @Autowired
+    private EventsService eventsService;
 
     @Autowired
     private KafkaProducerService kafkaProducerService;
@@ -152,6 +153,8 @@ public class MessageReplyService {
                         return leaveRequestService.processApplyLeaveRequest(user, incomingUserMessage, outUserMessageDto, lastMessage);
                     } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.BIRTHDAY)) {
                         return birthdayService.processNewBirthdayRequest(incomingUserMessage, outUserMessageDto, lastMessage);
+                    } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LISTEVENTS) || lastMessage.getFlow().getCommandType().equals(CommandType.CREATEEVENT)) {
+                        return eventsService.processEventsRequest(user, incomingUserMessage, outUserMessageDto, null, lastMessage);
                     } else {
                         return processInvalidRequest(outUserMessageDto);
                     }
@@ -234,7 +237,9 @@ public class MessageReplyService {
             return dashboardService.processDashboardRequest(userMessageDto,"/dashboard",0,user);
         } else if (commandType.equals(CommandType.TODO)) {
             return processToDoRequest(userMessageDto);
-        } else {
+        } else if(commandType.equals(CommandType.EVENTS) || commandType.equals(CommandType.LISTEVENTS) || commandType.equals(CommandType.CREATEEVENT)){
+            return eventsService.processEventsRequest(user, incomingMessageDto, userMessageDto, commandType, null);
+        }else {
             return processInvalidRequest(userMessageDto);
         }
     }

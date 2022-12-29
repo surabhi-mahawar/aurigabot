@@ -6,7 +6,10 @@ public enum CommandType {
 	LEAVEREQUEST("/leaverequest"),
 	APPROVELEAVEREQUEST("/approveleaverequest"),
 	DASHBOARD("/dashboard"),
-	TODO("/todo");
+	TODO("/todo"),
+	EVENTS("/events"),
+	CREATEEVENT("/createevents"),
+	LISTEVENTS("/listevents");
 
 	private String commandType;
 

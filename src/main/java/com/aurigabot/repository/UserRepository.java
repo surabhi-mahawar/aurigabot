@@ -25,4 +25,6 @@ public interface UserRepository extends R2dbcRepository<User, UUID> {
     @Query("select * from users where EXTRACT(day from dob) = EXTRACT(day from $1) and EXTRACT(month from dob) = EXTRACT(month from $1)")
     Flux<User> findAllByDob(LocalDate date);
 
+    Mono<User> findByEmail(String   email);
+
 }
