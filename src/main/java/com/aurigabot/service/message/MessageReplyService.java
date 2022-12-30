@@ -5,12 +5,10 @@ import com.aurigabot.dto.UserMessageDto;
 import com.aurigabot.entity.User;
 import com.aurigabot.entity.UserMessage;
 import com.aurigabot.enums.*;
-import com.aurigabot.repository.FlowRepository;
 import com.aurigabot.repository.LeaveRequestRepository;
 import com.aurigabot.repository.UserMessageRepository;
 import com.aurigabot.repository.UserRepository;
 import com.aurigabot.service.KafkaProducerService;
-import com.aurigabot.service.calendar_events.GoogleAuthService;
 import com.aurigabot.service.command.*;
 import com.aurigabot.utils.BotUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -167,7 +165,7 @@ public class MessageReplyService {
 
                     } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.BIRTHDAY)) {
                         return birthdayService.processNewBirthdayRequest(incomingUserMessage, outUserMessageDto, lastMessage);
-                    } else if(lastMessage.getFlow() != null && lastMessage.getFlow().getCommandType().equals(CommandType.LISTEVENTS) || lastMessage.getFlow().getCommandType().equals(CommandType.CREATEEVENT)) {
+                    } else if(lastMessage.getFlow() != null && (lastMessage.getFlow().getCommandType().equals(CommandType.LISTEVENTS) || lastMessage.getFlow().getCommandType().equals(CommandType.CREATEEVENT))) {
                         return eventsService.processEventsRequest(user, incomingUserMessage, outUserMessageDto, null, lastMessage);
                     } else {
                         return processInvalidRequest(outUserMessageDto);

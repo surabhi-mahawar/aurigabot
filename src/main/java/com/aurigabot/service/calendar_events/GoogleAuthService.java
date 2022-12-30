@@ -97,8 +97,8 @@ public class GoogleAuthService {
      * Generate new access token from the refresh token saved in DB
      * @return
      */
-    public Mono<String> getNewAccessTokenUsingRefreshToken() {
-            Mono<GoogleTokens> monoUser = calendarUserService.getCurrentUser();
+    public Mono<String> getNewAccessTokenUsingRefreshToken(String email) {
+            Mono<GoogleTokens> monoUser = calendarUserService.getCurrentUser(email);
             return monoUser.map(user -> {
                 String newToken = null;
                 try {

@@ -9,11 +9,8 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.services.oauth2.model.Userinfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 @Service
@@ -79,6 +76,14 @@ public class CalendarUserService {
     public Mono<GoogleTokens> getCurrentUser() {
         try {
             return calendarUserRepository.findTopByOrderByIdDesc();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public Mono<GoogleTokens> getCurrentUser(String email) {
+        try {
+            return calendarUserRepository.findByEmail(email);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
