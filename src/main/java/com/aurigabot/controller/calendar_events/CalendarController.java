@@ -28,8 +28,8 @@ public class CalendarController {
 
 
     @RequestMapping(value = "/createEvent", method = RequestMethod.POST)
-    public ResponseEntity<String> createEvent(@RequestBody CreateEventRequestDTO createEventRequestDTO) {
-        String response = calendarService.createGoogleCalendarEvent(createEventRequestDTO);
+    public ResponseEntity<Mono<String>> createEvent(@RequestBody CreateEventRequestDTO createEventRequestDTO) {
+        Mono<String> response = calendarService.createGoogleCalendarEvent(createEventRequestDTO, "vishal.bothra@aurigait.com");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

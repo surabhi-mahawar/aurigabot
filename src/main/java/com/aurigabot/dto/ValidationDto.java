@@ -13,6 +13,8 @@ public class ValidationDto {
 
     private DateValidationDto dateValidationConfig;
 
+    private DateTimeValidationDto dateTimeValidationConfig;
+
     private TextValidationDto textValidationConfig;
 
 }
