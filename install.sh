@@ -28,7 +28,7 @@ else
     curl -fsSL https://get.docker.com -o get-docker.sh
     # DRY_RUN=1 sh ./get-docker.sh
 fi
-if [ -x "$(command -v docker)" ]; then
+if [ -x "$(command -v docker-compose)" ]; then
     echo "Docker Compose already available"
     echo ""
 else
