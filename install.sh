@@ -1,3 +1,5 @@
+echo "->Welcome to the installation script"
+
 echo "==> Ensuring .bashrc exists and is writable"
 touch ~/.bashrc
 
@@ -35,6 +37,11 @@ else
     sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 fi
+
+echo "->Create aurigabot build"
+sudo apt-get update -y
+sudo apt-get install maven -y
+mvn clean install -DskipTests
 
 echo "Start postgresqldb, kafka zookeeper"
 docker-compose up -d postgresqldb kafka zookeeper
