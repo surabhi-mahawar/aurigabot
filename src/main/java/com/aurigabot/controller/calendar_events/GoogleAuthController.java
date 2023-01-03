@@ -1,6 +1,5 @@
 package com.aurigabot.controller.calendar_events;
 
-import com.aurigabot.entity.GoogleTokens;
 import com.aurigabot.service.calendar_events.GoogleAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,7 +9,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
 
 @RestController
 public class GoogleAuthController {
@@ -29,7 +27,8 @@ public class GoogleAuthController {
     }
     @RequestMapping(value = "/refreshToken", method = RequestMethod.GET)
     public ResponseEntity<String> refreshToken() {
-        Mono<String> response = googleAuthService.getNewAccessTokenUsingRefreshToken();
+        String email="vishal.bothra@aurigait.com";
+        Mono<String> response = googleAuthService.getNewAccessTokenUsingRefreshToken(email);
         response.subscribe();
         return new ResponseEntity<>("Refreshed", HttpStatus.OK);
     }

@@ -25,6 +25,7 @@ public class TelegramService {
                     return uriBuilder.path("/sendMessage")
                             .queryParam("chat_id", outboundMessage.getChatId())
                             .queryParam("text", outboundMessage.getText())
+                            .queryParam("parse_mode", outboundMessage.getParseMode())
                             .build();
                 })
                 .retrieve()

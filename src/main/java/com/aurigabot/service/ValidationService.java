@@ -1,5 +1,6 @@
 package com.aurigabot.service;
 
+import com.aurigabot.dto.DateTimeValidationDto;
 import com.aurigabot.dto.DateValidationDto;
 import com.aurigabot.dto.TextValidationDto;
 import com.aurigabot.dto.ValidationDto;
@@ -11,6 +12,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
@@ -23,6 +25,8 @@ public Pair<String,Object> fieldValidator(ValidationDto validationDto, String ms
         return textValidator(validationDto.getTextValidationConfig(),msg);
     } else if (validationDto.getFieldType()==FieldType.DATE) {
         return dateValidator(validationDto.getDateValidationConfig(),msg);
+    } else if (validationDto.getFieldType()==FieldType.DATETIME) {
+        return dateTimeValidator(validationDto.getDateTimeValidationConfig(),msg);
     }
     else {
         return integerValidator(validationDto,msg);
@@ -127,6 +131,49 @@ public Pair<String,Object> fieldValidator(ValidationDto validationDto, String ms
         
         return result;
     }
+
+    public Pair<String,Object> dateTimeValidator(DateTimeValidationDto validationDto, String msg){
+        Pair<String,Object> result = null;
+
+        DateTimeFormatter formatter =DateTimeFormatter.ofPattern(DateUtil.getGlobalDateFormat());
+        if(validationDto.getFormat()!=null){
+            formatter =DateTimeFormatter.ofPattern(validationDto.getFormat());
+        }
+        try {
+            LocalDateTime date = LocalDateTime.parse(msg, formatter);
+            if (validationDto.getGte()==null&& validationDto.getLte()==null){
+                result=Pair.of("pass",date);
+                return result;
+            }
+            if (validationDto.getGte().equals("now")){
+                if(date.compareTo(LocalDateTime.now()) < 0) {
+                    result = Pair.of("Try again !! \nEntered date should be greater than or equal to current date.",false);
+                    return result;
+                }}
+            if (validationDto.getLte().equals("now")){
+                if(date.compareTo(LocalDateTime.now()) > 0) {
+                    result = Pair.of("Try again !! \nEntered date should be before or equal to current date.",false);
+                    return result;
+                }
+                LocalDateTime dateLt = LocalDateTime.parse(validationDto.getLte(), formatter);
+                if (dateLt.compareTo(dateLt)>0){
+                    result = Pair.of("Try again !! \nEntered date should be before or equal to"+dateLt,false);
+                    return result;
+                }
+                LocalDateTime dateGt = LocalDateTime.parse(validationDto.getGte(), formatter);
+                if (dateLt.compareTo(dateGt)<0){
+                    result = Pair.of("Try again !! \nEntered date should be before or equal to"+dateGt,false);
+                    return result;
+                }
+            }
+
+        } catch (DateTimeParseException e){
+            result = Pair.of("please enter the date in proper format i.e "+ validationDto.getFormat() +" eg. 11-02-2000 17:00:00",false);
+        }
+
+        return result;
+    }
+
     public Pair<String,Object> integerValidator(ValidationDto validationDto,String msg){
         return Pair.of("",null);
     }

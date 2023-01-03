@@ -9,11 +9,15 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.*;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -33,10 +37,8 @@ public class CalendarService {
      * @param search
      * @return
      */
-    public Mono<String> fetchCalendarEvents(String startDate, String endDate, String search) {
-//        AtomicReference<Events> eventList = null;
-//        String response;
-            return calendarUserService.getCurrentUser().map(user->{
+    public Mono<String> fetchCalendarEvents(String startDate, String endDate, String email, String search) {
+            return calendarUserService.getCurrentUser(email).map(user->{
                 Events eventList=null;
                 String response="";
                 GoogleCredential credential = new GoogleCredential().setAccessToken(user.getAccessToken());
@@ -59,29 +61,30 @@ public class CalendarService {
                     response="Error in fetching google calendar data, please try again!";
                 }
 
-                response= eventList.getItems().toString();
+                List<Event> eventsList= eventList.getItems();
+                if (eventsList.size() == 0) {
+                    response += "There are no events for these dates";
+                } else {
+                    response += "Please find the list of events below:";
+                    for(Event event: eventsList) {
+                        JSONParser jsonParser = new JSONParser();
+                        Object obj;
+                        try {
+                            obj = jsonParser.parse(event.get("start").toString());
+                            JSONObject eventJson= (JSONObject) obj;
+                            String date=eventJson.get("dateTime").toString();
+                            OffsetDateTime odt = OffsetDateTime.parse(date);
+                            response += "\n"+odt.toLocalDate()+" -> "+event.get("summary");
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                response+="\n\nPlease select a option from the list to proceed further.";
 
                 return response;
             });
-//            GoogleCredential credential = new GoogleCredential().setAccessToken(token.get());
-//
-//            final DateTime startDateTime = new DateTime(startDate + "T00:00:00");
-//            final DateTime endDateTime = new DateTime(endDate + "T23:59:59");
-//
-//            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-//            client = new com.google.api.services.calendar.Calendar.Builder(httpTransport, JSON_FACTORY, credential)
-//                    .setApplicationName(APPLICATION_NAME).build();
-//
-//            Calendar.Events events = client.events();
-//            if(search == null || search.trim().equals("")) {
-//                eventList = events.list("primary").setTimeZone("Asia/Kolkata").setTimeMin(startDateTime).setTimeMax(endDateTime).execute();
-//            } else {
-//                eventList = events.list("primary").setTimeZone("Asia/Kolkata").setTimeMin(startDateTime).setTimeMax(endDateTime).setQ(search).execute();
-//            }
-//
-//            response = eventList.getItems().toString();
-
-//        return response.get();
     }
 
     /**
@@ -89,60 +92,58 @@ public class CalendarService {
      * @param createEventRequestDTO
      * @return
      */
-    public String createGoogleCalendarEvent(CreateEventRequestDTO createEventRequestDTO) {
-        try {
-//            String token = calendarUserService.getCurrentUser().block().getAccessToken();
-            AtomicReference<String> token = new AtomicReference<>("");
-            calendarUserService.getCurrentUser().subscribe(user->{
-                token.set(user.getAccessToken());});
-            GoogleCredential credential = new GoogleCredential().setAccessToken(token.get());
-            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            client = new com.google.api.services.calendar.Calendar.Builder(httpTransport, JSON_FACTORY, credential)
-                    .setApplicationName(APPLICATION_NAME).build();
+    public Mono<String> createGoogleCalendarEvent(CreateEventRequestDTO createEventRequestDTO, String email) {
+            return calendarUserService.getCurrentUser(email).map(user->{
+                try {
+                    GoogleCredential credential = new GoogleCredential().setAccessToken(user.getAccessToken());
+                    httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+                    client = new com.google.api.services.calendar.Calendar.Builder(httpTransport, JSON_FACTORY, credential)
+                            .setApplicationName(APPLICATION_NAME).build();
 
-            Event event = new Event()
-                    .setSummary(createEventRequestDTO.getSummary())
-                    .setLocation(createEventRequestDTO.getLocation())
-                    .setDescription(createEventRequestDTO.getDescription());
+                    Event event = new Event()
+                            .setSummary(createEventRequestDTO.getSummary())
+                            .setLocation(createEventRequestDTO.getLocation())
+                            .setDescription(createEventRequestDTO.getDescription());
 
-            DateTime startDateTime = new DateTime(createEventRequestDTO.getStartDate());
-            EventDateTime start = new EventDateTime()
-                    .setDateTime(startDateTime)
-                    .setTimeZone(createEventRequestDTO.getTimezone());
-            event.setStart(start);
+                    DateTime startDateTime = new DateTime(createEventRequestDTO.getStartDate()+":00+05:30");
+                    EventDateTime start = new EventDateTime()
+                            .setDateTime(startDateTime)
+                            .setTimeZone(createEventRequestDTO.getTimezone());
+                    event.setStart(start);
 
-            DateTime endDateTime = new DateTime(createEventRequestDTO.getEndDate());
-            EventDateTime end = new EventDateTime()
-                    .setDateTime(endDateTime)
-                    .setTimeZone(createEventRequestDTO.getTimezone());
-            event.setEnd(end);
+                    DateTime endDateTime = new DateTime(createEventRequestDTO.getEndDate()+":00+05:30");
+                    EventDateTime end = new EventDateTime()
+                            .setDateTime(endDateTime)
+                            .setTimeZone(createEventRequestDTO.getTimezone());
+                    event.setEnd(end);
 
-            event.setLocked(true);
+                    event.setLocked(true);
 
-            EventAttendee[] attendees = new EventAttendee[] {
-                    new EventAttendee().setEmail("vishal.bothra@aurigait.com"),
+                    EventAttendee[] attendees = new EventAttendee[] {
+                            new EventAttendee().setEmail("vishal.bothra@aurigait.com"),
 //                    new EventAttendee().setEmail("sbrin@example.com"),
-            };
-            event.setAttendees(Arrays.asList(attendees));
+                    };
+                    event.setAttendees(Arrays.asList(attendees));
 
-            EventReminder[] reminderOverrides = new EventReminder[] {
-                    new EventReminder().setMethod("email").setMinutes(24 * 60),
-                    new EventReminder().setMethod("popup").setMinutes(10),
-            };
-            Event.Reminders reminders = new Event.Reminders()
-                    .setUseDefault(false)
-                    .setOverrides(Arrays.asList(reminderOverrides));
-            event.setReminders(reminders);
+                    EventReminder[] reminderOverrides = new EventReminder[] {
+                            new EventReminder().setMethod("email").setMinutes(24 * 60),
+                            new EventReminder().setMethod("popup").setMinutes(10),
+                    };
+                    Event.Reminders reminders = new Event.Reminders()
+                            .setUseDefault(false)
+                            .setOverrides(Arrays.asList(reminderOverrides));
+                    event.setReminders(reminders);
 
-            event.setVisibility("default");
+                    event.setVisibility("default");
 
-            String calendarId = "primary";
+                    String calendarId = "primary";
 
-            event = client.events().insert(calendarId, event).execute();
-            return event.getHtmlLink();
-        } catch (Exception e) {
-            return "Error encountered while creating event: " + e.getMessage();
-        }
+                    event = client.events().insert(calendarId, event).execute();
+                    return "Event created click on the link to view:\n"+event.getHtmlLink();
+                } catch (Exception e) {
+                    return "Error encountered while creating event: " + e.getMessage();
+                }
+            });
     }
 
     public String deleteGoogleCalendarEvent(String title){
