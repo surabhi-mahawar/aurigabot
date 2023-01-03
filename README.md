@@ -19,17 +19,20 @@
 * WebFlux
 * R2DBC
 * PostgreSQL
+* Kafka
 
 ### Commands ###
 * /dashboard- personalized message to show useful information.
 * /birthday- show list of people having birthday on that day.
 * /leaverequest- bot asks certain question for sending leave application.
+* /approveleaverequest - approve leave requests submitted by other users.
 * /todo- coming soon.
+* /events - See or create google calender events.
 
 <img src="src/main/resources/static/demo.png">
 
 ## Run on Gitpod ##
-[![Open v1 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/surabhi-mahawar/aurigabot/install.sh)
+[![Open v1 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/surabhi-mahawar/aurigabot/blob/kafka-flow/install.sh)
 
 ### Future Scope ###
 * Whatsapp Adapters
