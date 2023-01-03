@@ -5,10 +5,16 @@ echo "Please provide the telegram bot username"
 read TELEGRAM_BOT_USERNAME
 echo "Please provide the telegram bot token"
 read TELEGRAM_BOT_TOKEN
+echo "Please provide the netcore whatsapp source"
+read NETCORE_WHATSAPP_SOURCE
+echo "Please provide the netcore whatsapp token"
+read NETCORE_WHATSAPP_TOKEN
 echo ""
 # export env variables
 sed -i "s|TELEGRAM_BOT_USERNAME=.*|TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}|g" .env
 sed -i "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}|g" .env
+sed -i "s|NETCORE_WHATSAPP_SOURCE=.*|NETCORE_WHATSAPP_SOURCE=${NETCORE_WHATSAPP_SOURCE}|g" .env
+sed -i "s|NETCORE_WHATSAPP_TOKEN=.*|NETCORE_WHATSAPP_TOKEN=${NETCORE_WHATSAPP_TOKEN}|g" .env
 
 if [ -x "$(command -v docker)" ]; then
     echo "Docker already available"
