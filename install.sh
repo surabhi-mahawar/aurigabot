@@ -36,8 +36,8 @@ else
     sudo chmod +x /usr/local/bin/docker-compose
 fi
 
-echo "Start postgresqldb"
-docker-compose up -d postgresqldb
+echo "Start postgresqldb, kafka zookeeper"
+docker-compose up -d postgresqldb kafka zookeeper
 
 echo "Start aurigabot service"
 docker-compose up -d aurigabot
